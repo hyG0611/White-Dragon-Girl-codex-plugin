@@ -13,27 +13,29 @@ if sys.platform == 'win32':
 import cv2
 import numpy as np
 from PySide6.QtCore import QAbstractNativeEventFilter, QEasingCurve, QPoint, QPropertyAnimation, QRect, Qt, QSettings, QTimer, Signal
-from PySide6.QtGui import QColor, QIcon, QKeySequence, QLinearGradient, QPainter, QPixmap, QPolygon
+from PySide6.QtGui import QColor, QFontMetrics, QIcon, QKeySequence, QLinearGradient, QPainter, QPixmap, QPolygon
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication, QFileDialog, QWidget, QMenu, QInputDialog, QMessageBox, QStyle, QSystemTrayIcon
 from activity import Activity
 from media import ClipPool
 from dialogs import TodoDialog, edit_hotkey, edit_menu, edit_settings
 from island import MediaDashboard
+from reminders import can_snooze, check_reminder, snooze_reminder
 from widgets import DesktopWidgets
 
 ROOT = Path(__file__).resolve().parents[1]
 SOCKET = 'dsh-dragon-codex-v1'
 
 
-class VisibilityHotkey(QAbstractNativeEventFilter):
+class GlobalHotkey(QAbstractNativeEventFilter):
     """Register a single Windows hotkey independent of the pet window."""
-    def __init__(self, pet):
+    def __init__(self, hotkey_id, sequence, callback):
         super().__init__()
-        self.pet = pet
+        self.hotkey_id = hotkey_id
+        self.callback = callback
         self.registered = False
         self.user32 = ctypes.WinDLL('user32') if sys.platform == 'win32' else None
-        self.sequence = pet.settings.value('visibility_sequence', 'Ctrl+Alt+P')
+        self.sequence = sequence
 
     @staticmethod
     def key_codes(sequence):
@@ -52,7 +54,7 @@ class VisibilityHotkey(QAbstractNativeEventFilter):
             modifiers, key = self.key_codes(self.sequence)
         except ValueError:
             return False
-        if not self.user32 or not self.user32.RegisterHotKey(None, 1, modifiers, key):
+        if not self.user32 or not self.user32.RegisterHotKey(None, self.hotkey_id, modifiers, key):
             return False
         app = QApplication.instance()
         app.installNativeEventFilter(self)
@@ -62,7 +64,7 @@ class VisibilityHotkey(QAbstractNativeEventFilter):
 
     def disable(self):
         if self.registered:
-            self.user32.UnregisterHotKey(None, 1)
+            self.user32.UnregisterHotKey(None, self.hotkey_id)
             app = QApplication.instance()
             app.removeNativeEventFilter(self)
             app.aboutToQuit.disconnect(self.disable)
@@ -71,8 +73,8 @@ class VisibilityHotkey(QAbstractNativeEventFilter):
     def nativeEventFilter(self, event_type, message):
         if event_type == b'windows_dispatcher_MSG':
             event = wintypes.MSG.from_address(int(message))
-            if event.message == 0x0312 and event.wParam == 1:
-                self.pet.setVisible(not self.pet.isVisible())
+            if event.message == 0x0312 and event.wParam == self.hotkey_id:
+                QTimer.singleShot(0, self.callback)
                 return True, 0
         return False, 0
 
@@ -133,9 +135,16 @@ class Pet(QWidget):
         self.glide.setDuration(280)
         self.glide.setEasingCurve(QEasingCurve.OutCubic)
         self.glide.finished.connect(self.finish_move)
+        self.walk_enabled = self.settings.value('floor_walk', False, type=bool)
+        self.walk_motion = QPropertyAnimation(self, b'pos', self)
+        self.walk_motion.setEasingCurve(QEasingCurve.InOutSine)
+        self.walk_timer = QTimer(self)
+        self.walk_timer.setInterval(12_000)
+        self.walk_timer.timeout.connect(self.walk_step)
         self.spin_timer = QTimer(self)
         self.spin_timer.timeout.connect(self.spin_frame)
         self.message = ''
+        self.message_opens_chat = False
         self.bubble_timer = QTimer(self)
         self.bubble_timer.setSingleShot(True)
         self.bubble_timer.timeout.connect(self.clear_message)
@@ -169,14 +178,20 @@ class Pet(QWidget):
         self.activity_state = ('idle', 0)
         self.dashboard = MediaDashboard(self)
         self.chat_window = None
+        self.quick_chat = None
         self.screen_watcher = None
         self.selecting_screenshot = False
         self.activity_timer = QTimer(self)
         self.activity_timer.timeout.connect(self.refresh_activity)
         self.activity_timer.start(15_000)
-        self.hotkey = VisibilityHotkey(self)
+        self.hotkey = GlobalHotkey(1, self.settings.value('visibility_sequence', 'Ctrl+Alt+P'),
+                                  lambda: self.setVisible(not self.isVisible()))
+        self.chat_hotkey = GlobalHotkey(2, self.settings.value('quick_chat_sequence', 'Ctrl+Alt+J'),
+                                       self.open_quick_chat)
         if self.settings.value('visibility_hotkey', False, type=bool):
             self.hotkey.enable()
+        if self.settings.value('quick_chat_hotkey', True, type=bool):
+            self.chat_hotkey.enable()
         self.create_tray()
         self.server = QLocalServer(self)
         self.server.newConnection.connect(self.accept)
@@ -240,32 +255,42 @@ class Pet(QWidget):
         reminders = []
         changed = False
         for todo in self.todos:
-            if todo.get('archived'):
-                continue
-            remaining = todo['due'] - now
-            if remaining <= 0:
-                todo['archived'] = True
-                changed = True
-                if remaining >= -600:
-                    reminders.append(todo['text'])
-            elif remaining <= todo.get('lead', 0) * 60 and not todo.get('warned'):
-                todo['warned'] = True
-                changed = True
-                reminders.append('即将到期：' + todo['text'])
+            before = todo.copy()
+            notification = check_reminder(todo, now)
+            changed |= todo != before
+            if notification:
+                reminders.append(notification)
         if changed:
             self.save_todos()
         if not reminders:
             return
         self.notify('白龙待办提醒', '\n'.join(reminders))
 
-    def notify(self, title, text, duration=8000):
+    def snooze_latest(self):
+        now = time()
+        recent = [todo for todo in self.todos if can_snooze(todo, now)]
+        if not recent:
+            return
+        latest = max(todo['last_fired'] for todo in recent)
+        for todo in recent:
+            if todo['last_fired'] == latest:
+                snooze_reminder(todo, now)
+        self.save_todos()
+        self.notify('白龙待办提醒', '已设为 10 分钟后再提醒。')
+
+    def add_snooze_action(self, menu):
+        action = menu.addAction('刚到期的待办 · 10 分钟后再提醒', self.snooze_latest)
+        action.setEnabled(any(can_snooze(todo, time()) for todo in self.todos))
+        menu.aboutToShow.connect(lambda: action.setEnabled(any(can_snooze(todo, time()) for todo in self.todos)))
+
+    def notify(self, title, text, duration=8000, open_chat=False):
         if self.isVisible():
-            self.say(text, duration)
+            self.say(text, duration, open_chat=open_chat)
         elif self.tray:
             self.tray.showMessage(title, text, msecs=duration)
         else:
             self.show()
-            self.say(text, duration)
+            self.say(text, duration, open_chat=open_chat)
 
     def play(self, name):
         if name not in self.actions:
@@ -275,6 +300,8 @@ class Pet(QWidget):
         self.release_clip()
         self.clip_key, self.cap = key, capture
         self.current = name
+        if name != self.idle:
+            self.pause_walk()
         self.update_frame_interval()
 
     def update_frame_interval(self):
@@ -298,11 +325,15 @@ class Pet(QWidget):
         passthrough.setCheckable(True)
         passthrough.toggled.connect(self.set_passthrough)
         menu.addAction('查询 Codex 额度', self.widgets.request_quota)
+        menu.addAction('待办提醒', self.edit_todos)
+        self.add_snooze_action(menu)
         menu.addAction('桌面灵动岛', self.dashboard.show)
         menu.addAction('桌宠对话', self.open_chat)
+        menu.addAction('快捷对话', self.open_quick_chat)
         menu.addAction('截图问答', self.queue_screenshot)
         menu.addAction('开启 / 停止主动识屏', self.toggle_screen_watcher)
         menu.addAction('退出桌宠', QApplication.quit)
+        menu.aboutToShow.connect(self.pause_walk)
         self.tray.setContextMenu(menu)
         self.tray.show()
 
@@ -323,12 +354,16 @@ class Pet(QWidget):
         self.timer.start()
         if self.auto_enabled:
             self.auto.start()
+        self.pause_walk()
 
     def hideEvent(self, event):
         self.timer.stop()
         self.release_clip()
         self.auto.stop()
         self.glide.stop()
+        self.walk_timer.stop()
+        self.walk_motion.stop()
+        self.offset = None
         self.spin_timer.stop()
         self.angle = 0
         if self.owner is None and getattr(self, 'screen_watcher', None) is not None:
@@ -365,6 +400,11 @@ class Pet(QWidget):
             self.pixmap = frame
             self.update()
 
+    def bubble_rect(self, font):
+        flags = Qt.AlignCenter | Qt.TextWordWrap
+        height = QFontMetrics(font).boundingRect(QRect(63, 0, 354, 120), flags, self.message).height() + 16
+        return QRect(44, 3, 392, height)
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -381,9 +421,7 @@ class Pet(QWidget):
             font.setPixelSize(self.bubble_font)
             painter.setFont(font)
             flags = Qt.AlignCenter | Qt.TextWordWrap
-            text = QRect(63, 0, 354, 120)
-            height = painter.boundingRect(text, flags, self.message).height() + 16
-            box = QRect(44, 3, 392, height)
+            box = self.bubble_rect(font)
             gradient = QLinearGradient(box.topLeft(), box.bottomRight())
             gradient.setColorAt(0, QColor('#f8fdff'))
             gradient.setColorAt(1, QColor('#dedcff'))
@@ -401,6 +439,13 @@ class Pet(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
+            if self.message_opens_chat:
+                font = self.font()
+                font.setPixelSize(self.bubble_font)
+                if self.bubble_rect(font).contains(event.position().toPoint()):
+                    self.open_chat()
+                    return
+            self.pause_walk()
             self.glide.stop()
             self.offset = event.globalPosition().toPoint() - self.pos()
             self.start_pos = event.globalPosition().toPoint()
@@ -477,13 +522,56 @@ class Pet(QWidget):
         self.update()
 
     def move_away_from(self, pet, distance):
+        self.pause_walk()
         area = (QApplication.screenAt(self.geometry().center()) or QApplication.primaryScreen()).availableGeometry()
         direction = 1 if self.x() >= pet.x() else -1
         target = max(area.left(), min(self.x() + direction * distance, area.right() - self.width() + 1))
         self.move(target, self.y())
         self.settings.setValue('position', self.pos())
 
+    def pause_walk(self):
+        self.walk_motion.stop()
+        if self.walk_enabled and not self.locked and self.isVisible():
+            self.walk_timer.start()
+        else:
+            self.walk_timer.stop()
+
+    def set_walk(self, enabled):
+        if self.walk_enabled != enabled:
+            self.walk_enabled = enabled
+            self.settings.setValue('floor_walk', enabled)
+            self.pause_walk()
+
+    def walk_step(self):
+        host = self.owner or self
+        if (not self.walk_enabled or not self.isVisible() or self.locked or self.offset is not None
+                or self.cap is None or self.current != self.idle or self.message or self.underMouse()
+                or self.spin_timer.isActive() or self.glide.state() == QPropertyAnimation.Running
+                or self.walk_motion.state() == QPropertyAnimation.Running or host.activity_state[0] != 'idle'
+                or host.selecting_screenshot or QApplication.activePopupWidget() or QApplication.activeModalWidget()):
+            return
+        screen = QApplication.screenAt(self.geometry().center()) or self.screen()
+        area = screen.availableGeometry()
+        left, right = area.left(), max(area.left(), area.right() - self.width() + 1)
+        bottom = max(area.top(), area.bottom() - self.height() + 1)
+        start = self.pos()
+        x = max(left, min(start.x(), right))
+        if start.y() == bottom and start.x() == x:
+            if (x == left and self.facing < 0) or (x == right and self.facing > 0):
+                self.facing *= -1
+            x = max(left, min(x + 140 * self.facing, right))
+        target = QPoint(x, bottom)
+        if target == start:
+            return
+        self.edge_angle = 0
+        self.walk_motion.setStartValue(start)
+        self.walk_motion.setEndValue(target)
+        self.walk_motion.setDuration(max(350, min(3500, (target - start).manhattanLength() * 19)))
+        self.walk_motion.start()
+        self.update()
+
     def spin(self):
+        self.pause_walk()
         self.spin_started = monotonic()
         self.spin_timer.start(16)
 
@@ -495,6 +583,7 @@ class Pet(QWidget):
         self.update()
 
     def contextMenuEvent(self, event):
+        self.pause_walk()
         menu = QMenu(self)
         host = self.owner or self
         roles = menu.addMenu('切换角色')
@@ -505,9 +594,11 @@ class Pet(QWidget):
             menu.addAction('关闭这只桌宠', self.close)
         else:
             menu.addAction('待办提醒', self.edit_todos)
+            self.add_snooze_action(menu)
         host.widgets.add_actions(menu)
         menu.addAction('桌面灵动岛', host.dashboard.show)
         menu.addAction('桌宠对话', host.open_chat)
+        menu.addAction('快捷对话', host.open_quick_chat)
         menu.addAction('截图问答', host.queue_screenshot)
         if sys.platform == 'win32':
             vision = menu.addMenu('主动识屏')
@@ -522,6 +613,10 @@ class Pet(QWidget):
         toggle.setCheckable(True)
         toggle.setChecked(self.auto_enabled)
         toggle.triggered.connect(self.set_auto)
+        walk = menu.addAction('沿屏幕底边散步')
+        walk.setCheckable(True)
+        walk.setChecked(self.walk_enabled)
+        walk.triggered.connect(self.set_walk)
         for key, label in [('click_sound', '点击音效'), ('self_talk', '随机自言自语'),
                            ('edge_probe', '边缘探头')]:
             option = menu.addAction(label)
@@ -537,7 +632,7 @@ class Pet(QWidget):
         shortcut.setCheckable(True)
         shortcut.setChecked(self.hotkey.registered)
         shortcut.setEnabled(self.hotkey.user32 is not None)
-        shortcut.toggled.connect(host.set_visibility_hotkey)
+        shortcut.triggered.connect(lambda enabled: host.set_hotkey(host.hotkey, 'visibility_hotkey', enabled))
         adjustments = menu.addMenu('显示与播放')
         adjustments.addAction('不透明度', lambda: self.adjust('opacity', '不透明度（%）', 20, 100))
         adjustments.addAction('播放速率', lambda: self.adjust('speed', '播放速率（%）', 25, 300))
@@ -545,7 +640,14 @@ class Pet(QWidget):
         adjustments.addAction('气泡字号', lambda: self.adjust('bubble_font', '气泡字号（像素）', 10, 24))
         adjustments.addAction('修改自言自语台词', self.edit_self_talk)
         if sys.platform == 'win32':
-            adjustments.addAction('设置全局显隐快捷键…', host.configure_visibility_hotkey)
+            adjustments.addAction('设置全局显隐快捷键…', lambda: host.configure_hotkey(
+                host.hotkey, 'visibility_sequence', '设置全局显隐快捷键'))
+            quick_key = adjustments.addAction(f'全局快捷对话键（{host.chat_hotkey.sequence}）')
+            quick_key.setCheckable(True)
+            quick_key.setChecked(host.chat_hotkey.registered)
+            quick_key.triggered.connect(lambda enabled: host.set_hotkey(host.chat_hotkey, 'quick_chat_hotkey', enabled))
+            adjustments.addAction('设置快捷对话键…', lambda: host.configure_hotkey(
+                host.chat_hotkey, 'quick_chat_sequence', '设置快捷对话键'))
             adjustments.addAction('选择点击音效…', self.choose_click_sound)
             if self.settings.value('click_wav', ''):
                 adjustments.addAction('恢复默认点击音效', lambda: self.settings.remove('click_wav'))
@@ -605,6 +707,7 @@ class Pet(QWidget):
                 self.apply_adjustment(key, value)
         self.set_auto(switches.pop('auto'))
         self.set_locked(switches.pop('locked'))
+        self.set_walk(switches.pop('floor_walk'))
         for key, enabled in switches.items():
             self.settings.setValue(key, enabled)
 
@@ -621,10 +724,22 @@ class Pet(QWidget):
         chat.raise_()
         chat.activateWindow()
 
+    def open_quick_chat(self):
+        if self.selecting_screenshot or QApplication.activeModalWidget():
+            return
+        if self.quick_chat is None:
+            from chat_window import QuickChat
+            self.quick_chat = QuickChat(self, self.chat())
+        self.show()
+        self.pause_walk()
+        self.quick_chat.present()
+
     def queue_screenshot(self):
         if self.selecting_screenshot:
             return
         self.selecting_screenshot = True
+        for pet in (self, *self.children_pets.values()):
+            pet.pause_walk()
         QTimer.singleShot(120, self.capture_question)
 
     def capture_question(self):
@@ -665,37 +780,40 @@ class Pet(QWidget):
             self.auto.stop()
         self.settings.setValue('auto', enabled)
 
-    def set_visibility_hotkey(self, enabled):
-        if enabled and not self.hotkey.enable():
-            QMessageBox.warning(self, '快捷键注册失败', f'{self.hotkey.sequence} 可能已被其他应用占用。')
+    def set_hotkey(self, hotkey, key, enabled):
+        if enabled and not hotkey.enable():
+            QMessageBox.warning(self, '快捷键注册失败', f'{hotkey.sequence} 可能已被其他应用占用。')
             return
         if not enabled:
-            self.hotkey.disable()
-        self.settings.setValue('visibility_hotkey', enabled)
+            hotkey.disable()
+        self.settings.setValue(key, enabled)
 
-    def configure_visibility_hotkey(self):
-        sequence = edit_hotkey(self, QKeySequence(self.hotkey.sequence))
-        if sequence is None or sequence == self.hotkey.sequence:
+    def configure_hotkey(self, hotkey, key, title):
+        sequence = edit_hotkey(self, QKeySequence(hotkey.sequence), title)
+        if sequence is None or sequence == hotkey.sequence:
             return
         try:
-            self.hotkey.key_codes(sequence)
+            hotkey.key_codes(sequence)
         except ValueError as error:
             QMessageBox.warning(self, '快捷键无效', str(error))
             return
-        old = self.hotkey.sequence
-        enabled = self.hotkey.registered
-        self.hotkey.disable()
-        self.hotkey.sequence = sequence
-        if enabled and not self.hotkey.enable():
-            self.hotkey.sequence = old
-            self.hotkey.enable()
+        old = hotkey.sequence
+        enabled = hotkey.registered
+        hotkey.disable()
+        hotkey.sequence = sequence
+        if enabled and not hotkey.enable():
+            hotkey.sequence = old
+            hotkey.enable()
             QMessageBox.warning(self, '快捷键注册失败', f'{sequence} 可能已被其他应用占用。')
             return
-        self.settings.setValue('visibility_sequence', sequence)
+        self.settings.setValue(key, sequence)
 
     def set_locked(self, enabled):
+        changed = self.locked != enabled
         self.locked = enabled
         self.settings.setValue('locked', enabled)
+        if changed:
+            self.pause_walk()
 
     def adjust(self, key, label, minimum, maximum):
         defaults = {'interval': 45, 'bubble_font': 14}
@@ -753,8 +871,10 @@ class Pet(QWidget):
                 lines = self.settings.value('self_talk_lines', [], type=list)
                 self.say(random.choice(lines or ['休息一下吧。', '我在这里陪着你。', '今天也一起加油。']))
 
-    def say(self, message, duration=8000):
+    def say(self, message, duration=8000, open_chat=False):
+        self.pause_walk()
         self.message = message[:100]
+        self.message_opens_chat = open_chat
         self.bubble_timer.start(duration)
         self.update()
 
@@ -776,6 +896,9 @@ class Pet(QWidget):
                 self.play(self.idle)
                 self.clear_message()
             return
+        if changed:
+            for pet in self.children_pets.values():
+                pet.pause_walk()
         if not changed and event != status:
             return
         messages = {'thinking': '正在思考', 'working': '正在处理任务', 'attention': '有事项需要确认'}
@@ -816,6 +939,7 @@ class Pet(QWidget):
 
     def clear_message(self):
         self.message = ''
+        self.message_opens_chat = False
         self.update()
 
 

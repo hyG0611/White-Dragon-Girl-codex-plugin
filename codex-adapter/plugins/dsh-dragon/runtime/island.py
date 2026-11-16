@@ -7,6 +7,7 @@ from PySide6.QtCore import QObject, QPoint, Qt, QTimer
 from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QToolButton, QVBoxLayout, QWidget
 
 from now_playing import current_line, fetch_lyrics, parse_lrc, read_windows_track
+from reminders import reminder_due
 
 
 class MediaDashboard(QObject):
@@ -193,11 +194,11 @@ class Island(QWidget):
         else:
             self.media_label.setText(self.media.track_state)
             self.lyric_label.clear()
-        pending = [todo for todo in self.pet.todos if not todo.get('archived')]
+        pending = [(due, todo['text']) for todo in self.pet.todos if (due := reminder_due(todo)) is not None]
         if pending:
-            next_item = min(pending, key=lambda todo: todo['due'])
-            due = datetime.fromtimestamp(next_item['due']).strftime('%m-%d %H:%M')
-            self.todo_label.setText(f'待办 {len(pending)} 项 · {due} {next_item["text"]}')
+            timestamp, text = min(pending, key=lambda item: item[0])
+            due = datetime.fromtimestamp(timestamp).strftime('%m-%d %H:%M')
+            self.todo_label.setText(f'待办 {len(pending)} 项 · {due} {text}')
         else:
             self.todo_label.setText('待办 · 无')
         status, count = self.pet.activity_state

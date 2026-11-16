@@ -2,16 +2,19 @@
 from base64 import b64encode
 import json
 from pathlib import Path
+import sys
 
-from PySide6.QtCore import QByteArray, QBuffer, QIODevice, QSaveFile, QStandardPaths, Qt
+from PySide6.QtCore import QByteArray, QBuffer, QEvent, QIODevice, QSaveFile, QStandardPaths, Qt, Signal
 from PySide6.QtGui import QPixmap, QTextCursor
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
+    QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
     QLineEdit, QMessageBox, QPlainTextEdit, QPushButton, QVBoxLayout,
 )
 
 from chat_api import ChatRequest, completions_url
+from chat_memory import edit_memory, memory_context
 from speech import ReplySpeech
+from voice_input import VoiceInput
 
 
 def image_part(image):
@@ -52,6 +55,8 @@ def load_sessions(path):
 
 
 class ChatWindow(QDialog):
+    quick_finished = Signal(str, bool)
+
     def __init__(self, pet):
         super().__init__(pet, Qt.Window)
         self.settings = pet.settings
@@ -61,6 +66,7 @@ class ChatWindow(QDialog):
         self.sessions = load_sessions(self.history_path)
         self.key = ''
         self.pending = None
+        self.quick_pending = False
         self.image = None
         self.request = ChatRequest(self)
         self.request.delta.connect(self.append)
@@ -89,6 +95,14 @@ class ChatWindow(QDialog):
         self.history.setReadOnly(True)
         self.history.document().setMaximumBlockCount(5000)
         layout.addWidget(self.history, 1)
+        memory = QPushButton('白龙记忆')
+        memory.clicked.connect(lambda: edit_memory(self, self.settings))
+        toolbar.addWidget(memory)
+        remember = QPushButton('记住选中内容')
+        remember.setEnabled(False)
+        self.history.copyAvailable.connect(remember.setEnabled)
+        remember.clicked.connect(lambda: edit_memory(self, self.settings, self.history.textCursor().selectedText()))
+        toolbar.addWidget(remember)
         self.attachment = QLabel()
         self.attachment.setAlignment(Qt.AlignCenter)
         self.attachment.hide()
@@ -261,31 +275,39 @@ class ChatWindow(QDialog):
         self.cancel_button.setEnabled(busy or self.read_aloud.isChecked())
 
     def send(self):
-        question = self.input.toPlainText().strip()
-        if self.pending is not None or (not question and self.image is None):
-            return
+        self.start_message(self.input.toPlainText())
+
+    def start_message(self, question, quick=False):
+        question = question.strip()
+        image = None if quick else self.image
+        if self.pending is not None:
+            return False
+        if not question and image is None:
+            return False
         if len(question) > 4000:
             self.set_status('每条问题最多 4000 字。')
-            return
+            return False
         question = question or '请说明截图中的内容。'
-        messages = []
+        messages = memory_context(self.settings)
         for turn in self.selected_history()[-6:]:
             messages.extend([{'role': 'user', 'content': turn['question'][:4000]},
                              {'role': 'assistant', 'content': turn['answer'][:5000]}])
         try:
             content = question
-            if self.image is not None:
-                content = [{'type': 'text', 'text': question}, image_part(self.image)]
+            if image is not None:
+                content = [{'type': 'text', 'text': question}, image_part(image)]
             messages.append({'role': 'user', 'content': content})
             self.request.start(self.endpoint, self.model, self.key, messages)
         except (RuntimeError, ValueError) as error:
             self.set_status(str(error))
-            return
+            return False
         self.speech.stop()
         self.pending = question
+        self.quick_pending = quick
         self.set_busy(True)
         self.set_status('正在等待模型回复…')
         self.append(f'\n\n你：{question}\n桌宠：')
+        return True
 
     def append(self, text):
         self.history.moveCursor(QTextCursor.End)
@@ -299,19 +321,26 @@ class ChatWindow(QDialog):
         del history[:-50]
         saved = self.save()
         self.pending = None
-        self.clear_attachment()
-        self.input.clear()
+        quick, self.quick_pending = self.quick_pending, False
+        if not quick:
+            self.clear_attachment()
+            self.input.clear()
         self.reload_sessions(0)
         self.set_busy(False)
         self.set_status('' if saved else '回复已收到，但本地历史写入失败。')
+        if quick:
+            self.quick_finished.emit(answer, True)
         if self.read_aloud.isChecked():
             self.speech.speak(answer)
 
     def fail(self, message):
         self.pending = None
+        quick, self.quick_pending = self.quick_pending, False
         self.render_history()
         self.set_busy(False)
         self.set_status(message)
+        if quick:
+            self.quick_finished.emit(message, False)
 
     def stop(self):
         self.request.cancel()
@@ -321,3 +350,136 @@ class ChatWindow(QDialog):
         self.stop()
         self.clear_attachment()
         super().done(result)
+
+
+class QuickChat(QDialog):
+    def __init__(self, pet, chat):
+        super().__init__(pet, Qt.Window | Qt.WindowStaysOnTopHint)
+        self.pet = pet
+        self.chat = chat
+        self.sent_text = ''
+        self.voice_mode = None
+        self.setWindowTitle('白龙快捷对话')
+        self.setMinimumWidth(380)
+        layout = QVBoxLayout(self)
+        row = QHBoxLayout()
+        self.input = QLineEdit()
+        self.input.setMaxLength(4000)
+        self.input.setPlaceholderText('输入消息，按 Enter 发送')
+        self.input.returnPressed.connect(self.send)
+        row.addWidget(self.input)
+        self.voice = VoiceInput(self)
+        if sys.platform == 'win32':
+            talk = QPushButton('按住说话（F9）')
+            talk.setAutoDefault(False)
+            talk.setFocusPolicy(Qt.NoFocus)
+            talk.pressed.connect(lambda: self.start_voice('mouse'))
+            talk.released.connect(lambda: self.stop_voice('mouse'))
+            row.addWidget(talk)
+            self.record_button = QPushButton('开始录音')
+            self.record_button.setAutoDefault(False)
+            self.record_button.clicked.connect(self.toggle_recording)
+            row.addWidget(self.record_button)
+            self.voice.state_changed.connect(self.update_voice_button)
+            self.installEventFilter(self)
+            self.input.installEventFilter(self)
+        full = QPushButton('完整对话')
+        full.setAutoDefault(False)
+        full.clicked.connect(self.open_full)
+        row.addWidget(full)
+        layout.addLayout(row)
+        self.status = QLabel()
+        self.status.setTextFormat(Qt.PlainText)
+        self.status.setWordWrap(True)
+        self.status.setMinimumHeight(self.status.fontMetrics().height() * 2)
+        layout.addWidget(self.status)
+        self.voice.status.connect(self.status.setText)
+        self.voice.recognized.connect(self.input.insert)
+        QApplication.instance().aboutToQuit.connect(self.voice.cancel)
+        chat.quick_finished.connect(self.finish)
+
+    def eventFilter(self, watched, event):
+        kind = event.type()
+        if kind in (QEvent.KeyPress, QEvent.KeyRelease) and event.key() == Qt.Key_F9:
+            if not event.isAutoRepeat():
+                if kind == QEvent.KeyPress:
+                    self.start_voice('keyboard')
+                else:
+                    self.stop_voice('keyboard')
+            return True
+        if watched is self and kind == QEvent.WindowDeactivate and self.voice.state in ('opening', 'recording'):
+            self.voice.cancel('快捷对话失去焦点，录音已取消。')
+        return super().eventFilter(watched, event)
+
+    def start_voice(self, mode):
+        if not self.voice.busy:
+            self.voice_mode = mode
+            self.voice.press()
+
+    def stop_voice(self, mode):
+        if self.voice_mode == mode:
+            self.voice.release()
+
+    def toggle_recording(self):
+        if self.voice_mode == 'click':
+            self.stop_voice('click')
+        else:
+            self.start_voice('click')
+
+    def update_voice_button(self, state):
+        if state == 'idle':
+            self.voice_mode = None
+        can_stop = self.voice_mode == 'click' and state in ('opening', 'recording')
+        self.record_button.setText('停止录音' if can_stop else '开始录音')
+        self.record_button.setEnabled(state == 'idle' or can_stop)
+
+    def hideEvent(self, event):
+        self.voice.cancel()
+        super().hideEvent(event)
+
+    def present(self):
+        if not self.voice.busy:
+            self.status.setText('正在等待当前回复…' if self.chat.pending is not None else '')
+        self.adjustSize()
+        anchor = self.pet.frameGeometry()
+        area = (QApplication.screenAt(anchor.center()) or self.pet.screen()).availableGeometry()
+        width, height = self.frameGeometry().width(), self.frameGeometry().height()
+        x = min(anchor.center().x() - width // 2, area.right() - width + 1)
+        y = anchor.top() - height - 8
+        if y < area.top():
+            y = min(anchor.bottom() + 8, area.bottom() - height + 1)
+        self.move(max(x, area.left()), max(y, area.top()))
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        self.input.setFocus()
+
+    def open_full(self):
+        self.hide()
+        self.pet.open_chat()
+
+    def send(self):
+        if self.voice.busy or not self.input.text().strip():
+            return
+        if self.chat.pending is not None:
+            self.status.setText('正在等待当前回复…')
+        elif self.chat.start_message(self.input.text(), quick=True):
+            self.sent_text = self.input.text()
+            self.hide()
+            self.pet.say('正在等待模型回复…')
+        else:
+            self.status.setText(self.chat.status.text())
+
+    def finish(self, text, success):
+        if success:
+            if self.input.text() == self.sent_text:
+                self.input.clear()
+            summary = ' '.join(text.split())
+            if len(summary) > 76:
+                summary = summary[:76] + '…'
+            self.pet.notify('白龙对话', summary + '\n点气泡查看完整回复', 20000, open_chat=True)
+        else:
+            self.pet.notify('白龙对话', text)
+        self.sent_text = ''
+        if not self.voice.busy:
+            self.status.setText('' if success else text)
