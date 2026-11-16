@@ -2,29 +2,129 @@
 from datetime import datetime
 from time import time
 
-from PySide6.QtCore import QDateTime, Qt
+from PySide6.QtCore import QDateTime, QEvent, Qt, Signal
 from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QDateTimeEdit, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QKeySequenceEdit, QLineEdit,
+    QCheckBox, QComboBox, QDateTimeEdit, QDialogButtonBox, QFormLayout, QHBoxLayout, QLineEdit,
     QListWidget, QListWidgetItem, QLabel, QPushButton, QSpinBox, QVBoxLayout, QWidget,
 )
 from reminders import REPEAT_OPTIONS, can_snooze, next_repeat, parse_reminder, reminder_due, snooze_reminder
+from pet_window import PetDialog
 
 
-def edit_hotkey(parent, sequence, title='设置全局显隐快捷键'):
-    dialog = QDialog(parent)
+def drag_label(text):
+    label = QLabel(text)
+    label.setCursor(Qt.SizeAllCursor)
+    label.setToolTip('按住这里也可以拖动窗口')
+    return label
+
+
+def edit_number(parent, title, label, value, minimum, maximum, step=1):
+    dialog = PetDialog(parent)
     dialog.setWindowTitle(title)
-    layout = QVBoxLayout(dialog)
-    layout.addWidget(QLabel('请按住 Ctrl、Alt、Shift 或 Win，再按一个字母或数字。'))
-    edit = QKeySequenceEdit(sequence)
-    edit.setMaximumSequenceLength(1)
-    layout.addWidget(edit)
+    dialog.setMinimumWidth(280)
+    form = QFormLayout(dialog)
+    field = QSpinBox()
+    field.setRange(minimum, maximum)
+    field.setSingleStep(step)
+    field.setValue(value)
+    form.addRow(drag_label(label), field)
     buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
     buttons.accepted.connect(dialog.accept)
     buttons.rejected.connect(dialog.reject)
+    form.addRow(buttons)
+    field.setFocus()
+    field.selectAll()
+    return field.value() if dialog.exec() else None
+
+
+def display_hotkey(sequence):
+    return '+'.join('Win' if key == 'Meta' else key for key in sequence.split('+'))
+
+
+class HotkeyEdit(QLineEdit):
+    recorded = Signal(str)
+    invalid = Signal()
+    modifiers = (('Ctrl', Qt.ControlModifier), ('Alt', Qt.AltModifier),
+                 ('Shift', Qt.ShiftModifier), ('Meta', Qt.MetaModifier))
+    modifier_keys = (Qt.Key_Control, Qt.Key_Alt, Qt.Key_Shift, Qt.Key_Meta, Qt.Key_AltGr)
+
+    def __init__(self, sequence):
+        super().__init__(display_hotkey(sequence))
+        self.setReadOnly(True)
+        self.setAccessibleName('快捷键组合')
+
+    def event(self, event):
+        if event.type() == QEvent.ShortcutOverride and event.key() not in (Qt.Key_Tab, Qt.Key_Backtab):
+            if any(event.modifiers() & flag for _, flag in self.modifiers):
+                event.accept()
+                return True
+        return super().event(event)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key in self.modifier_keys or event.isAutoRepeat():
+            event.accept()
+            return
+        if key in (Qt.Key_Tab, Qt.Key_Backtab) or (
+                not event.modifiers() and key in (Qt.Key_Escape, Qt.Key_Return, Qt.Key_Enter)):
+            super().keyPressEvent(event)
+            return
+        parts = [name for name, flag in self.modifiers if event.modifiers() & flag]
+        if parts and (Qt.Key_A <= key <= Qt.Key_Z or Qt.Key_0 <= key <= Qt.Key_9):
+            sequence = '+'.join([*parts, chr(key)])
+            self.setText(display_hotkey(sequence))
+            self.recorded.emit(sequence)
+        else:
+            self.invalid.emit()
+        event.accept()
+
+
+def edit_hotkey(parent, sequence, title='设置全局显隐快捷键', apply=None):
+    dialog = PetDialog(parent)
+    dialog.setWindowTitle(title)
+    layout = QVBoxLayout(dialog)
+    layout.addWidget(drag_label('请按住 Ctrl、Alt、Shift 或 Win，再按一个字母或数字。'))
+    chosen = sequence.toString(QKeySequence.PortableText)
+    edit = HotkeyEdit(chosen)
+    layout.addWidget(edit)
+    status = QLabel()
+    status.setTextFormat(Qt.PlainText)
+    status.setWordWrap(True)
+    status.setMinimumHeight(status.fontMetrics().height() * 2)
+    layout.addWidget(status)
+    buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+    save = buttons.button(QDialogButtonBox.Save)
+    save.setText('保存')
+    save.setDefault(True)
+    buttons.button(QDialogButtonBox.Cancel).setText('取消')
+
+    def recorded(value):
+        nonlocal chosen
+        chosen = value
+        status.clear()
+        save.setEnabled(True)
+
+    def invalid():
+        status.setText('请同时按住修饰键和一个字母或数字。')
+        save.setEnabled(False)
+
+    def confirm():
+        error = apply(chosen) if apply else None
+        if error:
+            status.setText(error)
+            edit.setFocus()
+        else:
+            dialog.accept()
+
+    edit.recorded.connect(recorded)
+    edit.invalid.connect(invalid)
+    buttons.accepted.connect(confirm)
+    buttons.rejected.connect(dialog.reject)
     layout.addWidget(buttons)
+    edit.setFocus()
     if dialog.exec():
-        return edit.keySequence().toString(QKeySequence.PortableText)
+        return chosen
     return None
 
 
@@ -46,7 +146,7 @@ def repeat_picker(value=''):
 
 
 def edit_menu(parent, labels, hidden, groups=None):
-    dialog = QDialog(parent)
+    dialog = PetDialog(parent)
     dialog.setWindowTitle('配置菜单')
     dialog.resize(380, 480)
     layout = QVBoxLayout(dialog)
@@ -109,7 +209,7 @@ def edit_menu(parent, labels, hidden, groups=None):
 
 
 def edit_settings(pet):
-    dialog = QDialog(pet)
+    dialog = PetDialog(pet)
     dialog.setWindowTitle('桌宠设置')
     form = QFormLayout(dialog)
     numbers = {}
@@ -147,7 +247,7 @@ def edit_settings(pet):
             {key: field.isChecked() for key, field in switches.items()})
 
 
-class TodoDialog(QDialog):
+class TodoDialog(PetDialog):
     def __init__(self, pet):
         super().__init__(pet)
         self.pet = pet
@@ -203,7 +303,7 @@ class TodoDialog(QDialog):
         self.edit_item(None)
 
     def add_sentence(self):
-        dialog = QDialog(self)
+        dialog = PetDialog(self)
         dialog.setWindowTitle('一句话添加提醒')
         dialog.resize(500, 130)
         layout = QVBoxLayout(dialog)
@@ -271,7 +371,7 @@ class TodoDialog(QDialog):
             self.pet.save_todos()
 
     def edit_item(self, todo):
-        dialog = QDialog(self)
+        dialog = PetDialog(self)
         dialog.setWindowTitle('设置提醒')
         form = QFormLayout(dialog)
         text = QLineEdit(todo['text'] if todo else '')

@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 
 from chat_api import ChatRequest, completions_url
 from chat_window import image_part
+from pet_window import PetDialog, keep_in_front, pick_files
 
 
 class RegionPicker(QDialog):
@@ -196,7 +197,7 @@ class ScreenWatcher(QObject):
         self.sent_target = None
 
     def configure(self):
-        dialog = QDialog(self.pet)
+        dialog = PetDialog(self.pet)
         dialog.setWindowTitle('主动识屏')
         form = QFormLayout(dialog)
         note = QLabel('启用后，桌宠会向所配置的视觉模型发送白名单应用的窗口图像。'
@@ -231,7 +232,7 @@ class ScreenWatcher(QObject):
             self.settings.setValue('vision_daily', maximum.value())
 
     def add_apps(self, dialog, items):
-        paths, _ = QFileDialog.getOpenFileNames(dialog, '选择允许识屏的应用', '', 'Windows 应用 (*.exe)')
+        paths = pick_files(dialog, '选择允许识屏的应用', 'Windows 应用 (*.exe)', QFileDialog.ExistingFiles)
         existing = {items.item(i).text().casefold() for i in range(items.count())}
         for entry in paths:
             path = str(Path(entry))
@@ -260,7 +261,7 @@ class ScreenWatcher(QObject):
                              QMessageBox.Yes | QMessageBox.No, self.pet)
         prompt.setTextFormat(Qt.PlainText)
         prompt.setDefaultButton(QMessageBox.No)
-        if prompt.exec() != QMessageBox.Yes:
+        if keep_in_front(prompt).exec() != QMessageBox.Yes:
             return
         self.approved_model = (self.chat.endpoint, self.chat.model)
         self.timer.start()

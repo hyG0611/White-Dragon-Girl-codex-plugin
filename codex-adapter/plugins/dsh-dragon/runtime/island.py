@@ -4,9 +4,10 @@ import queue
 import threading
 
 from PySide6.QtCore import QObject, QPoint, Qt, QTimer
-from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QToolButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QToolButton, QVBoxLayout, QWidget
 
 from now_playing import current_line, fetch_lyrics, parse_lrc, read_windows_track
+from pet_window import keep_in_front, pick_files
 from reminders import reminder_due
 
 
@@ -30,11 +31,6 @@ class MediaDashboard(QObject):
         self.island = Island(pet, self)
 
     def show(self):
-        if not self.island.isVisible():
-            self.island.move(self.pet.pos() + QPoint(90, -110))
-            screen = self.island.screen().availableGeometry()
-            self.island.move(max(screen.left(), min(self.island.x(), screen.right() - self.island.width() + 1)),
-                             max(screen.top(), self.island.y()))
         self.island.show()
         self.island.raise_()
 
@@ -76,11 +72,11 @@ class MediaDashboard(QObject):
             self.pet.notify('桌面灵动岛', '请先播放一首歌。')
             return
         generation = self.generation
-        path, _ = QFileDialog.getOpenFileName(self.island, '加载当前歌曲的歌词', '', 'LRC 歌词 (*.lrc)')
-        if not path or generation != self.generation:
+        paths = pick_files(self.island, '加载当前歌曲的歌词', 'LRC 歌词 (*.lrc)')
+        if not paths or generation != self.generation:
             return
         try:
-            with open(path, 'rb') as stream:
+            with open(paths[0], 'rb') as stream:
                 lines = parse_lrc(stream.read(262_144).decode('utf-8-sig'))
         except (OSError, ValueError):
             self.pet.notify('桌面灵动岛', '无法读取歌词文件。请选择 UTF-8 编码的 LRC。')
@@ -124,6 +120,7 @@ class MediaDashboard(QObject):
 class Island(QWidget):
     def __init__(self, pet, media):
         super().__init__(pet, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        keep_in_front(self)
         self.pet = pet
         self.media = media
         self.offset = None

@@ -15,12 +15,15 @@ import numpy as np
 from PySide6.QtCore import QAbstractNativeEventFilter, QEasingCurve, QPoint, QPropertyAnimation, QRect, Qt, QSettings, QTimer, Signal
 from PySide6.QtGui import QColor, QFontMetrics, QIcon, QKeySequence, QLinearGradient, QPainter, QPixmap, QPolygon
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
-from PySide6.QtWidgets import QApplication, QFileDialog, QWidget, QMenu, QInputDialog, QMessageBox, QStyle, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication, QWidget, QMenu, QStyle, QSystemTrayIcon
 from activity import Activity
 from media import ClipPool
-from dialogs import TodoDialog, edit_hotkey, edit_menu, edit_settings
+from dialogs import TodoDialog, display_hotkey, edit_hotkey, edit_menu, edit_number, edit_settings
 from island import MediaDashboard
+from pet_window import edit_text, pick_files, warn
 from reminders import can_snooze, check_reminder, snooze_reminder
+from role_dialog import import_role, local_roles
+from rolepacks import role_actions
 from widgets import DesktopWidgets
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -102,6 +105,7 @@ class Pet(QWidget):
             QApplication.instance().aboutToQuit.connect(self.pool.close)
         self.clip_key = None
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setWindowTitle('DSH 白龙 · Codex 素材版' if owner is None else f'DSH 白龙 · 桌宠 {slot + 1}')
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setAcceptDrops(True)
         self.resize(480, 320)
@@ -117,10 +121,9 @@ class Pet(QWidget):
         position = self.settings.value('position', default, type=QPoint)
         self.move(position if any(screen.availableGeometry().contains(position + self.rect().center())
                                   for screen in QApplication.screens()) else default)
-        self.roles = {'默认白龙': ROOT / 'assets' / 'videos'}
-        self.roles.update({path.name: path for path in (ROOT / 'assets' / 'characters').glob('*')
-                           if path.is_dir() and path.name not in self.roles})
+        self.reload_roles()
         self.role = self.settings.value('role', '默认白龙')
+        self.role_size = 100
         self.actions = {}
         self.current = ''
         self.cap = None
@@ -199,16 +202,50 @@ class Pet(QWidget):
             raise RuntimeError('Another pet is already running')
         self.connections = set()
 
+    def reload_roles(self):
+        self.roles = {'默认白龙': ROOT / 'assets' / 'videos'}
+        taken = {name.casefold() for name in self.roles}
+        for directory in (ROOT / 'assets' / 'characters', local_roles()):
+            for path in sorted(directory.glob('*')):
+                key = path.name.casefold()
+                if path.is_dir() and not path.name.startswith('.') and key not in taken:
+                    self.roles[path.name] = path
+                    taken.add(key)
+
+    def import_character(self, packed):
+        name = import_role(self, packed)
+        if name:
+            host = self.owner or self
+            for pet in (host, *host.children_pets.values()):
+                pet.reload_roles()
+            self.select_role(name)
+
+    def resize_role(self, percent):
+        previous = self.geometry()
+        screen = QApplication.screenAt(previous.center()) or self.screen()
+        area = screen.availableGeometry()
+        self.role_size = min(175, max(50, percent))
+        # Keep the pet above the taskbar, including when switching to a larger role.
+        ratio = min(self.role_size / 100, area.width() / 480, area.height() / 320)
+        self.resize(max(1, round(480 * ratio)), max(1, round(320 * ratio)))
+        centered = previous.x() + (previous.width() - self.width()) // 2
+        self.move(max(area.left(), min(centered, area.right() - self.width() + 1)),
+                  max(area.top(), min(previous.bottom() - self.height() + 1, area.bottom() - self.height() + 1)))
+        self.update()
+
+    def change_role_size(self):
+        value = edit_number(self, '当前角色大小', '大小（%）', self.role_size, 50, 175, 5)
+        if value is not None and value != self.role_size:
+            self.pause_walk()
+            self.glide.stop()
+            self.resize_role(value)
+            self.settings.setValue(f'role_size/{self.role}', self.role_size)
+            self.settings.setValue('position', self.pos())
+
     def switch_role(self, role):
         if role not in self.roles:
             raise ValueError('未知角色')
-        actions = {path.stem: path for path in sorted(self.roles[role].rglob('*'))
-                   if path.is_file() and path.suffix.lower() in {'.mp4', '.webm'}}
-        idle = next((name for name in ('待机呼吸休闲', 'idle') if name in actions), None)
-        if idle is None:
-            idle = next((name for name, path in actions.items() if path.parent.name == 'idle'), None)
-        if idle is None:
-            raise ValueError('角色缺少 idle.webm 或待机呼吸休闲.mp4')
+        actions, idle = role_actions(self.roles[role])
         previous = self.actions, getattr(self, 'idle', None)
         self.actions, self.idle = actions, idle
         try:
@@ -218,12 +255,15 @@ class Pet(QWidget):
             raise
         self.role = role
         self.settings.setValue('role', role)
+        self.pause_walk()
+        self.glide.stop()
+        self.resize_role(self.settings.value(f'role_size/{role}', 100, type=int))
 
     def select_role(self, role):
         try:
             self.switch_role(role)
         except (ValueError, RuntimeError) as error:
-            QMessageBox.warning(self, '无法切换角色', str(error))
+            warn(self, '无法切换角色', str(error))
 
     def spawn_pet(self):
         slot = next((n for n in range(1, 8) if n not in self.children_pets), None)
@@ -409,6 +449,7 @@ class Pet(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        painter.scale(self.width() / 480, self.height() / 320)
         painter.save()
         painter.setOpacity(self.opacity / 100)
         painter.translate(240, 185)
@@ -442,7 +483,9 @@ class Pet(QWidget):
             if self.message_opens_chat:
                 font = self.font()
                 font.setPixelSize(self.bubble_font)
-                if self.bubble_rect(font).contains(event.position().toPoint()):
+                position = event.position()
+                hit = QPoint(round(position.x() * 480 / self.width()), round(position.y() * 320 / self.height()))
+                if self.bubble_rect(font).contains(hit):
                     self.open_chat()
                     return
             self.pause_walk()
@@ -515,11 +558,14 @@ class Pet(QWidget):
         if host.settings.value('pet_collisions', False, type=bool):
             for other in (host, *host.children_pets.values()):
                 if other is not self and other.isVisible() and not other.locked and other.offset is None:
-                    overlap = self.geometry().adjusted(100, 85, -100, -35).intersected(
-                        other.geometry().adjusted(100, 85, -100, -35))
+                    overlap = self.body_geometry().intersected(other.body_geometry())
                     if not overlap.isEmpty():
                         other.move_away_from(self, overlap.width())
         self.update()
+
+    def body_geometry(self):
+        return self.geometry().adjusted(round(100 * self.width() / 480), round(85 * self.height() / 320),
+                                        -round(100 * self.width() / 480), -round(35 * self.height() / 320))
 
     def move_away_from(self, pet, distance):
         self.pause_walk()
@@ -589,6 +635,9 @@ class Pet(QWidget):
         roles = menu.addMenu('切换角色')
         for role in self.roles:
             roles.addAction(role, lambda name=role: self.select_role(name))
+        roles.addSeparator()
+        roles.addAction('导入角色文件夹…', lambda: self.import_character(False))
+        roles.addAction('导入角色 ZIP…', lambda: self.import_character(True))
         menu.addAction('新增桌宠', host.spawn_pet)
         if self.owner:
             menu.addAction('关闭这只桌宠', self.close)
@@ -634,20 +683,21 @@ class Pet(QWidget):
         shortcut.setEnabled(self.hotkey.user32 is not None)
         shortcut.triggered.connect(lambda enabled: host.set_hotkey(host.hotkey, 'visibility_hotkey', enabled))
         adjustments = menu.addMenu('显示与播放')
+        adjustments.addAction('当前角色大小…', lambda: QTimer.singleShot(0, self.change_role_size))
         adjustments.addAction('不透明度', lambda: self.adjust('opacity', '不透明度（%）', 20, 100))
         adjustments.addAction('播放速率', lambda: self.adjust('speed', '播放速率（%）', 25, 300))
         adjustments.addAction('自动互动间隔', lambda: self.adjust('interval', '自动互动间隔（秒）', 5, 3600))
         adjustments.addAction('气泡字号', lambda: self.adjust('bubble_font', '气泡字号（像素）', 10, 24))
         adjustments.addAction('修改自言自语台词', self.edit_self_talk)
         if sys.platform == 'win32':
-            adjustments.addAction('设置全局显隐快捷键…', lambda: host.configure_hotkey(
-                host.hotkey, 'visibility_sequence', '设置全局显隐快捷键'))
-            quick_key = adjustments.addAction(f'全局快捷对话键（{host.chat_hotkey.sequence}）')
+            adjustments.addAction('设置全局显隐快捷键…', lambda: QTimer.singleShot(0, lambda: host.configure_hotkey(
+                host.hotkey, 'visibility_sequence', '设置全局显隐快捷键')))
+            quick_key = adjustments.addAction(f'全局快捷对话键（{display_hotkey(host.chat_hotkey.sequence)}）')
             quick_key.setCheckable(True)
             quick_key.setChecked(host.chat_hotkey.registered)
             quick_key.triggered.connect(lambda enabled: host.set_hotkey(host.chat_hotkey, 'quick_chat_hotkey', enabled))
-            adjustments.addAction('设置快捷对话键…', lambda: host.configure_hotkey(
-                host.chat_hotkey, 'quick_chat_sequence', '设置快捷对话键'))
+            adjustments.addAction('设置快捷对话键…', lambda: QTimer.singleShot(0, lambda: host.configure_hotkey(
+                host.chat_hotkey, 'quick_chat_sequence', '设置快捷对话键')))
             adjustments.addAction('选择点击音效…', self.choose_click_sound)
             if self.settings.value('click_wav', ''):
                 adjustments.addAction('恢复默认点击音效', lambda: self.settings.remove('click_wav'))
@@ -673,9 +723,9 @@ class Pet(QWidget):
             if group and group not in submenus:
                 submenus[group] = menu.addMenu(group)
             submenus.get(group, menu).addAction(action)
-        shortcut.setText(f'全局显隐快捷键（{self.hotkey.sequence}）')
-        menu.addAction('桌宠设置', self.configure_settings)
-        menu.addAction('配置菜单', lambda: self.configure_menu(labels, hidden))
+        shortcut.setText(f'全局显隐快捷键（{display_hotkey(self.hotkey.sequence)}）')
+        menu.addAction('桌宠设置', lambda: QTimer.singleShot(0, self.configure_settings))
+        menu.addAction('配置菜单', lambda: QTimer.singleShot(0, lambda: self.configure_menu(labels, hidden)))
         menu.addAction('退出桌宠', QApplication.quit)
         menu.exec(event.globalPos())
 
@@ -782,31 +832,39 @@ class Pet(QWidget):
 
     def set_hotkey(self, hotkey, key, enabled):
         if enabled and not hotkey.enable():
-            QMessageBox.warning(self, '快捷键注册失败', f'{hotkey.sequence} 可能已被其他应用占用。')
+            warn(self, '快捷键注册失败', f'{display_hotkey(hotkey.sequence)} 可能已被其他应用占用。')
             return
         if not enabled:
             hotkey.disable()
         self.settings.setValue(key, enabled)
 
     def configure_hotkey(self, hotkey, key, title):
-        sequence = edit_hotkey(self, QKeySequence(hotkey.sequence), title)
-        if sequence is None or sequence == hotkey.sequence:
-            return
-        try:
-            hotkey.key_codes(sequence)
-        except ValueError as error:
-            QMessageBox.warning(self, '快捷键无效', str(error))
-            return
         old = hotkey.sequence
-        enabled = hotkey.registered
-        hotkey.disable()
-        hotkey.sequence = sequence
-        if enabled and not hotkey.enable():
-            hotkey.sequence = old
-            hotkey.enable()
-            QMessageBox.warning(self, '快捷键注册失败', f'{sequence} 可能已被其他应用占用。')
-            return
-        self.settings.setValue(key, sequence)
+        registered = [item for item in (self.hotkey, self.chat_hotkey) if item.registered]
+        for item in registered:
+            item.disable()
+
+        def apply(sequence):
+            try:
+                hotkey.key_codes(sequence)
+            except ValueError as error:
+                return str(error)
+            if any(item is not hotkey and item.sequence == sequence for item in registered):
+                return f'{display_hotkey(sequence)} 已用于白龙的另一个快捷键，请换一个。'
+            if sequence != old:
+                hotkey.sequence = sequence
+                if hotkey in registered and not hotkey.enable():
+                    hotkey.sequence = old
+                    return f'{display_hotkey(sequence)} 可能已被其他应用占用，请换一个。'
+                self.settings.setValue(key, sequence)
+            return None
+
+        try:
+            edit_hotkey(self, QKeySequence(old), title, apply)
+        finally:
+            for item in registered:
+                if not item.registered and not item.enable():
+                    warn(self, '快捷键注册失败', f'无法恢复 {display_hotkey(item.sequence)}，请重新设置。')
 
     def set_locked(self, enabled):
         changed = self.locked != enabled
@@ -817,10 +875,9 @@ class Pet(QWidget):
 
     def adjust(self, key, label, minimum, maximum):
         defaults = {'interval': 45, 'bubble_font': 14}
-        value, accepted = QInputDialog.getInt(
-            self, label, label, self.settings.value(key, defaults.get(key, 100), type=int),
-            minimum, maximum)
-        if accepted:
+        value = edit_number(self, label, label, self.settings.value(key, defaults.get(key, 100), type=int),
+                            minimum, maximum)
+        if value is not None:
             self.apply_adjustment(key, value)
 
     def apply_adjustment(self, key, value):
@@ -839,9 +896,9 @@ class Pet(QWidget):
             self.auto.setInterval(value * 1000)
 
     def choose_click_sound(self):
-        path, _ = QFileDialog.getOpenFileName(self, '选择点击音效', '', 'WAV 音频 (*.wav)')
-        if path:
-            self.settings.setValue('click_wav', path)
+        paths = pick_files(self, '选择点击音效', 'WAV 音频 (*.wav)')
+        if paths:
+            self.settings.setValue('click_wav', paths[0])
             self.settings.setValue('click_sound', True)
             self.play_click_sound()
 
@@ -857,10 +914,10 @@ class Pet(QWidget):
         QApplication.beep()
 
     def edit_self_talk(self):
-        text, accepted = QInputDialog.getMultiLineText(
+        text = edit_text(
             self, '自言自语台词', '每行一条。清空可恢复内置台词。',
-            '\n'.join(self.settings.value('self_talk_lines', [], type=list)))
-        if accepted:
+            '\n'.join(self.settings.value('self_talk_lines', [], type=list)), multiline=True)
+        if text is not None:
             lines = [line.strip()[:100] for line in text.splitlines() if line.strip()][:100]
             self.settings.setValue('self_talk_lines', lines)
 

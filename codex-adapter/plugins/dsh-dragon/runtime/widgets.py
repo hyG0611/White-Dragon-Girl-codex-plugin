@@ -7,7 +7,8 @@ import queue
 import threading
 
 from PySide6.QtCore import QObject, QProcess, QTimer
-from PySide6.QtWidgets import QApplication, QFileDialog, QInputDialog
+from PySide6.QtWidgets import QApplication, QFileDialog
+from pet_window import edit_text, pick_files
 from weather import CityNotFound, current_weather
 
 try:
@@ -99,9 +100,9 @@ class DesktopWidgets(QObject):
         self.pet.notify('白龙日历', text)
 
     def set_birthday(self):
-        value, accepted = QInputDialog.getText(self.pet, '生日提醒', '输入公历生日（MM-DD），清空可取消。',
-                                              text=self.settings.value('birthday', ''))
-        if not accepted:
+        value = edit_text(self.pet, '生日提醒', '输入公历生日（MM-DD），清空可取消。',
+                          self.settings.value('birthday', ''))
+        if value is None:
             return
         value = value.strip()
         if value:
@@ -136,7 +137,7 @@ class DesktopWidgets(QObject):
             self.pet.notify('白龙日历', '\n'.join(messages))
 
     def configure_launchers(self):
-        paths, _ = QFileDialog.getOpenFileNames(self.pet, '选择快捷启动应用', '', 'Windows 应用 (*.exe)')
+        paths = pick_files(self.pet, '选择快捷启动应用', 'Windows 应用 (*.exe)', QFileDialog.ExistingFiles)
         if paths:
             self.settings.setValue('quick_apps', list(dict.fromkeys(paths)))
 
@@ -182,10 +183,9 @@ class DesktopWidgets(QObject):
         if self.weather_poll.isActive():
             self.pet.notify('白龙天气', '正在查询天气…')
             return
-        city, accepted = QInputDialog.getText(self.pet, '查看天气', '输入城市名称',
-                                             text=self.settings.value('weather_city', '成都'))
-        city = city.strip()[:80]
-        if not accepted or not city:
+        city = edit_text(self.pet, '查看天气', '输入城市名称', self.settings.value('weather_city', '成都'))
+        city = (city or '').strip()[:80]
+        if not city:
             return
         self.settings.setValue('weather_city', city)
         self.pet.notify('白龙天气', '正在查询天气…')

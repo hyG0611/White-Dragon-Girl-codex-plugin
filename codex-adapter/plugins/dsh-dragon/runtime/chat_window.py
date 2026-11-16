@@ -7,12 +7,13 @@ import sys
 from PySide6.QtCore import QByteArray, QBuffer, QEvent, QIODevice, QSaveFile, QStandardPaths, Qt, Signal
 from PySide6.QtGui import QPixmap, QTextCursor
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
+    QApplication, QCheckBox, QComboBox, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
     QLineEdit, QMessageBox, QPlainTextEdit, QPushButton, QVBoxLayout,
 )
 
 from chat_api import ChatRequest, completions_url
 from chat_memory import edit_memory, memory_context
+from pet_window import PetDialog, keep_in_front, warn
 from speech import ReplySpeech
 from voice_input import VoiceInput
 
@@ -54,7 +55,7 @@ def load_sessions(path):
     return sessions
 
 
-class ChatWindow(QDialog):
+class ChatWindow(PetDialog):
     quick_finished = Signal(str, bool)
 
     def __init__(self, pet):
@@ -147,7 +148,7 @@ class ChatWindow(QDialog):
         return self.settings.value('chat_model', '')
 
     def configure(self):
-        dialog = QDialog(self)
+        dialog = PetDialog(self)
         dialog.setWindowTitle('模型设置')
         form = QFormLayout(dialog)
         endpoint = QLineEdit(self.endpoint)
@@ -173,7 +174,7 @@ class ChatWindow(QDialog):
                 if not model.text().strip():
                     raise ValueError('请填写模型名称。')
             except ValueError as error:
-                QMessageBox.warning(dialog, '模型设置', str(error))
+                warn(dialog, '模型设置', str(error))
                 continue
             self.settings.setValue('chat_endpoint', endpoint.text().strip())
             self.settings.setValue('chat_model', model.text().strip())
@@ -241,7 +242,10 @@ class ChatWindow(QDialog):
         index = self.selector.currentData()
         if not isinstance(index, int) or index < 0:
             return
-        if QMessageBox.question(self, '删除对话', '删除当前本地对话记录？') != QMessageBox.Yes:
+        prompt = QMessageBox(QMessageBox.Question, '删除对话', '删除当前本地对话记录？',
+                             QMessageBox.Yes | QMessageBox.No, self)
+        prompt.setDefaultButton(QMessageBox.No)
+        if keep_in_front(prompt).exec() != QMessageBox.Yes:
             return
         del self.sessions[index]
         saved = self.save()
@@ -352,7 +356,7 @@ class ChatWindow(QDialog):
         super().done(result)
 
 
-class QuickChat(QDialog):
+class QuickChat(PetDialog):
     def __init__(self, pet, chat):
         super().__init__(pet, Qt.Window | Qt.WindowStaysOnTopHint)
         self.pet = pet
@@ -441,14 +445,6 @@ class QuickChat(QDialog):
         if not self.voice.busy:
             self.status.setText('正在等待当前回复…' if self.chat.pending is not None else '')
         self.adjustSize()
-        anchor = self.pet.frameGeometry()
-        area = (QApplication.screenAt(anchor.center()) or self.pet.screen()).availableGeometry()
-        width, height = self.frameGeometry().width(), self.frameGeometry().height()
-        x = min(anchor.center().x() - width // 2, area.right() - width + 1)
-        y = anchor.top() - height - 8
-        if y < area.top():
-            y = min(anchor.bottom() + 8, area.bottom() - height + 1)
-        self.move(max(x, area.left()), max(y, area.top()))
         self.show()
         self.raise_()
         self.activateWindow()

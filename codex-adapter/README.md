@@ -20,7 +20,9 @@ Windows 下可在右键菜单启用全局显隐快捷键，默认是 **Ctrl+Alt+
 - **沿屏幕底边散步**可从右键菜单或「桌宠设置」为每只桌宠单独开启，默认关闭。空闲时桌宠先移到当前屏幕的可用区域底边，再隔一会儿移动一小段。锁定位置、隐藏、拖拽、显示气泡或 Codex 忙碌时让出控制。散步不会覆盖手动保存的位置。底边散步与一句话提醒参考 [Coopanion](https://github.com/Pal-AI-Lab/Coopanion)，均在本机运行。
 - **配置菜单**可勾选显隐、拖动排序，也可将选中的条目移入同名自定义子菜单。子菜单名称留空即可移回顶层。编辑窗口会实时预览布局，点击保存后生效。
 - **桌宠设置**集中管理不透明度、播放速率、自动互动间隔、气泡字号和常用互动开关。点击保存即时生效。
+- **窗口位置**。设置、对话、待办、导入预览和文件选择等窗口会显示在桌宠前面，优先在桌宠旁边打开。空间不足时会尽量减少遮挡。截图选区仍覆盖屏幕，方便框选。
 - **切换角色**可从右键选择「大肥鱼」或「默认白龙」。随附的大肥鱼角色包含 106 段透明 WebM。[素材来源与许可](plugins/dsh-dragon/assets/characters/大肥鱼/ASSETS.md)
+- **导入角色**可从「切换角色」选择素材文件夹或 ZIP。在预览窗口可切换动作、修改角色名，确认后保存到 Windows 的 `%LOCALAPPDATA%\DSHDragon\characters`。角色包最多 256 段动画、共 512 MiB，同一包内的动作需要不同的文件名。每只桌宠可通过「显示与播放 → 当前角色大小」为不同角色分别设置 50% 至 175% 的大小。
 - **自定义角色**可放在 `plugins/dsh-dragon/assets/characters/<角色名>/`。待机素材可命名为 `idle` 或 `待机呼吸休闲`，也可放在 `idle` 子目录。MP4 使用绿幕处理。透明 VP9 WebM 需要支持 `libvpx-vp9` 的 FFmpeg。请将 `ffmpeg.exe` 放进本地市场的 `.runtime/Scripts/` 或加入 PATH。可运行 `ffmpeg -decoders | Select-String libvpx-vp9` 检查 PATH 版本。
 - **新增桌宠**最多可同时打开八只。各自保存角色、位置和播放设置。动画在后台解码，相同素材与速率的待机动画共享解码器。短待机循环复用原始 RGBA 帧，全部桌宠共用 96 MiB 的帧缓存额度。超出额度的内容继续流式解码，单次互动独立播放。
 - **Codex 联动**通过 `dragon_control` 的 `activity` 命令接收 `thinking`、`working`、`attention`、`idle`。多个会话同时活跃时，按待确认、工作、思考的顺序显示。一个会话结束后，其余会话的状态继续生效。Hooks 只传入事件对应的状态和用于区分会话与轮次的哈希，状态保存在内存。统一安装会生成可选 hooks，可在 Codex 的 **设置 → Hooks** 中审阅并信任。已用真实 Codex CLI 和本地模拟模型验证工具调用及会话结束时的自动联动。
@@ -33,6 +35,7 @@ Windows 下可在右键菜单启用全局显隐快捷键，默认是 **Ctrl+Alt+
 
 - **桌宠对话**可从右键或托盘打开。在「模型设置」填写 Chat Completions 兼容接口的基础地址或完整地址，再填模型名称和服务需要的 API Key。远程地址使用 HTTPS，本机模型可用回环 HTTP。API Key 只保留在当前进程，重启后需重新输入。回复支持流式显示和停止。对话文本保存在 Windows 的 `%LOCALAPPDATA%\DSHDragon\chat-history.json`，可在窗口中切换或删除。[Chat Completions 接口](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)
 - **快捷对话**默认使用 **Ctrl+Alt+J**，也可从右键或托盘打开。它使用当前模型和对话，按 Enter 发送文字，点回复气泡查看全文。右键「显示与播放」可更换或关闭全局快捷键。
+- 设置快捷键时，请按住 Ctrl、Alt、Shift 或 Win，再按一个字母或数字。输入框会显示完整组合键。格式不符或已被占用时，可在原窗口查看提示并重新录入。
 - **按住说话**位于快捷对话。窗口获得焦点时按住 **F9** 或按住说话按钮，等看到「正在录音」再讲话。也可以点「开始录音」，说完点「停止录音」。Windows 在本机识别并填入可编辑草稿，按 Enter 才发送文字。每段最多 30 秒，录音保留在内存，需要可用的默认麦克风和支持听写的 Windows 本地识别语言。[Windows 本地语音识别](https://learn.microsoft.com/en-us/dotnet/api/system.speech.recognition.speechrecognitionengine?view=netframework-4.8)
 - **白龙记忆**位于完整聊天窗口。可直接添加、编辑或删除条目，也可在历史里选中文字，点「记住选中内容」后确认保存。记忆保存在本机设置中。只有勾选「在聊天请求中使用这些记忆」后，普通和快捷对话才会把条目随请求发给当前配置的模型。
 - **朗读回复**在对话窗口单独开启，使用 Windows 本地语音。关闭窗口或点击「停止」可中止朗读。

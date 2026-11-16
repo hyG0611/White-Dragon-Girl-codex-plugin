@@ -37,7 +37,8 @@ class Clip:
             raise RuntimeError('播放透明 WebM 需要将 FFmpeg 加入 PATH')
         self.interval = 100 / (24 * speed)
         self.speed = speed
-        threading.Thread(target=self.decode, daemon=True, name='DSH animation decoder').start()
+        self.worker = threading.Thread(target=self.decode, daemon=True, name='DSH animation decoder')
+        self.worker.start()
 
     def enqueue(self, frame):
         while not self.cancelled.is_set():

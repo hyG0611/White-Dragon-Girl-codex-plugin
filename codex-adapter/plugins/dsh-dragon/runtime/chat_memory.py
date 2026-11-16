@@ -2,7 +2,9 @@
 import json
 
 from PySide6.QtCore import QSettings
-from PySide6.QtWidgets import QCheckBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QPlainTextEdit
+from PySide6.QtWidgets import QCheckBox, QDialogButtonBox, QFormLayout, QLabel, QPlainTextEdit
+
+from pet_window import PetDialog
 
 
 MEMORY_LIMIT = 30
@@ -31,7 +33,7 @@ def memory_context(settings):
 
 def edit_memory(parent, settings, selection=''):
     enabled, notes = load_memory(settings)
-    dialog = QDialog(parent)
+    dialog = PetDialog(parent)
     dialog.setWindowTitle('白龙记忆')
     dialog.resize(520, 300)
     form = QFormLayout(dialog)
