@@ -10,12 +10,13 @@ sys.path.insert(0, str(ROOT.parent / 'codex-adapter/plugins/dsh-dragon/runtime')
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QGuiApplication
 import media
+from timing import CONFIG, FPS
 
 
 def main():
     app = QGuiApplication([])
     pool = media.ClipPool(lambda frame: frame)
-    path = ROOT / 'out-chulong/transparent/待机呼吸休闲.webm'
+    path = ROOT / CONFIG['outputFolder'] / 'transparent/待机呼吸休闲.webm'
     key = (path, 100, None)
     observed, failures = [], []
     previous = None
@@ -54,9 +55,9 @@ def main():
                   'errors': failures, 'measurement': 'Qt Clip.read at 8 ms; includes the 10-second loop boundary'}
         pool.close()
         clip.worker.join(timeout=5)
-    (ROOT / 'out-chulong/playback-report.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
+    (ROOT / CONFIG['outputFolder'] / 'playback-report.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
     print(json.dumps(result, indent=2), flush=True)
-    assert not failures and duration >= 12.3 and result['observed_fps'] >= 28
+    assert not failures and duration >= 12.3 and result['observed_fps'] >= FPS * .93
     assert starts.call_count == 1, 'The loop should reuse losslessly cached frames.'
 
 

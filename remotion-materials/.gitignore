@@ -4,6 +4,7 @@ public/*
 !public/poses/
 out/
 out-chulong/
+out-smooth-v1/
 dist/
 .cache/
 *.log

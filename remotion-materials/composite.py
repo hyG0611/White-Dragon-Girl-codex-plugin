@@ -5,6 +5,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from timing import CONFIG, FRAME_COUNT, records
 
 ROOT = Path(__file__).resolve().parent
 PUBLIC = ROOT / 'public'
@@ -12,12 +13,10 @@ SAFE_ACTIONS = set(json.loads((ROOT / 'src/safe-actions.json').read_text(encodin
 
 
 def composite(record):
-    safe = record['id'] in SAFE_ACTIONS
-    cache = 'frames-safe' if safe else 'frames-v3' if record['name'] == '睡觉-循环' else 'frames-v2' if int(record['id'][6:]) >= 100 else 'frames'
-    source = PUBLIC / cache / record['id']
-    destination = PUBLIC / ('composited-safe' if safe else 'composited') / record['id']
+    source = PUBLIC / CONFIG['preparedFolder'] / record['id']
+    destination = PUBLIC / CONFIG['compositedFolder'] / record['id']
     destination.mkdir(parents=True, exist_ok=True)
-    for frame in range(300):
+    for frame in range(FRAME_COUNT):
         target = destination / f'{frame:03d}.png'
         if target.exists():
             continue
@@ -33,8 +32,7 @@ def composite(record):
 
 
 if __name__ == '__main__':
-    records = json.loads((ROOT / 'src/actions.json').read_text(encoding='utf-8'))
     cv2.setNumThreads(1)
     with ThreadPoolExecutor(max_workers=4) as pool:
-        list(pool.map(composite, records))
-    print('109 green frame sequences composited.', flush=True)
+        list(pool.map(composite, records()))
+    print('Green frame sequences composited.', flush=True)

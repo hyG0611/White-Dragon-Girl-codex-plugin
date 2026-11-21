@@ -1,10 +1,10 @@
 {
-  "frames_observed": 371,
-  "duration_seconds": 12.317,
-  "observed_fps": 30.04,
-  "native_fps": 30.0,
+  "frames_observed": 740,
+  "duration_seconds": 12.31,
+  "observed_fps": 60.03,
+  "native_fps": 60.0,
   "decoder_starts": 1,
-  "maximum_frame_gap_ms": 40.86,
+  "maximum_frame_gap_ms": 24.72,
   "errors": [],
   "measurement": "Qt Clip.read at 8 ms; includes the 10-second loop boundary"
 }

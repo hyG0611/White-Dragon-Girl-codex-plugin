@@ -7,9 +7,10 @@ import subprocess
 
 import cv2
 import numpy as np
+from timing import CONFIG, FPS, FRAME_COUNT
 
 ROOT = Path(__file__).resolve().parent
-OUT = ROOT / 'out-chulong'
+OUT = ROOT / CONFIG['outputFolder']
 FFMPEG = Path(os.environ.get('PET_FFMPEG', r'D:\Desktop\ds-pet\dsh-pet\codex-adapter\.runtime\Scripts\ffmpeg.exe'))
 FRAME_BYTES = 640 * 360 * 4
 
@@ -20,13 +21,14 @@ def main():
         video = OUT / 'transparent' / (row['name'] + '.webm')
         metadata = cv2.VideoCapture(str(video))
         assert metadata.isOpened(), video
-        assert abs(metadata.get(cv2.CAP_PROP_FPS) - 30) < .001
+        assert abs(metadata.get(cv2.CAP_PROP_FPS) - FPS) < .001
         metadata.release()
         decoded = subprocess.run([str(FFMPEG), '-nostdin', '-loglevel', 'error', '-c:v', 'libvpx-vp9', '-i', str(video),
-                                  '-vf', r'select=eq(n\,0)+eq(n\,149)+eq(n\,299)', '-fps_mode', 'passthrough',
+                                  '-vf', f'select=not(mod(n\\,{FPS//2}))+eq(n\\,{FRAME_COUNT-1})', '-fps_mode', 'passthrough',
                                   '-f', 'rawvideo', '-pix_fmt', 'rgba', '-'], capture_output=True, check=True)
-        assert len(decoded.stdout) == FRAME_BYTES * 3, (row['name'], len(decoded.stdout), decoded.stderr)
-        frames = np.frombuffer(decoded.stdout, dtype='uint8').reshape(3, 360, 640, 4)
+        samples = list(range(0, FRAME_COUNT, FPS//2)) + [FRAME_COUNT - 1]
+        assert len(decoded.stdout) == FRAME_BYTES * len(samples), (row['name'], len(decoded.stdout), decoded.stderr)
+        frames = np.frombuffer(decoded.stdout, dtype='uint8').reshape(len(samples), 360, 640, 4)
         for frame in frames:
             alpha = frame[:, :, 3]
             assert alpha.max() == 255 and np.count_nonzero(alpha > 200) > 1000, row['name']
@@ -34,13 +36,13 @@ def main():
             assert alpha[:36].max() <= 4 and alpha[-36:].max() <= 4, row['name']
             assert alpha[:, :64].max() <= 4 and alpha[:, -64:].max() <= 4, row['name']
         row['webm'] = {'file': video.name, 'bytes': video.stat().st_size,
-                       'sha256': sha256(video.read_bytes()).hexdigest(), 'alpha_samples_checked': [0, 149, 299],
+                       'sha256': sha256(video.read_bytes()).hexdigest(), 'alpha_samples_checked': samples,
                        'transparent_edge_tolerance': 4}
         if index % 10 == 0:
             print(f'Alpha verified {index + 1}/{len(report)}', flush=True)
     (OUT / 'alpha-report.json').write_text(json.dumps({row['name']: row['webm'] for row in report},
                                                        ensure_ascii=False, indent=2), encoding='utf-8')
-    print('109 native 30 fps transparent WebM clips verified.', flush=True)
+    print(f'109 native {FPS} fps transparent WebM clips verified.', flush=True)
 
 
 if __name__ == '__main__':
