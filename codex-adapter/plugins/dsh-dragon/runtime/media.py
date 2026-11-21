@@ -2,10 +2,12 @@
 import queue
 from contextlib import closing
 from pathlib import Path
+import math
 import shutil
 import subprocess
 import sys
 import threading
+import zlib
 from time import monotonic
 
 import cv2
@@ -13,6 +15,7 @@ from PySide6.QtGui import QImage, QPixmap
 
 FRAME_BYTES = 640 * 360 * 4
 CACHE_LIMIT = 96 * 1024 * 1024
+CACHE_UNIT = 64 * 1024
 
 
 class Clip:
@@ -51,12 +54,20 @@ class Clip:
 
     def source_frames(self):
         if self.ffmpeg:
+            metadata = cv2.VideoCapture(str(self.path))
+            try:
+                fps = metadata.get(cv2.CAP_PROP_FPS)
+            finally:
+                metadata.release()
+            if not math.isfinite(fps) or not 0 < fps <= 240:
+                fps = 24
+            self.interval = 100 / (fps * self.speed)
             with self.process_lock:
                 if self.cancelled.is_set():
                     return
                 process = subprocess.Popen(
                     [self.ffmpeg, '-nostdin', '-v', 'error', '-c:v', 'libvpx-vp9', '-i', str(self.path),
-                     '-an', '-vf', 'fps=24,scale=640:360', '-f', 'rawvideo', '-pix_fmt', 'rgba', '-'],
+                     '-an', '-vf', 'scale=640:360', '-f', 'rawvideo', '-pix_fmt', 'rgba', '-'],
                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                     creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
                 self.process = process
@@ -99,10 +110,15 @@ class Clip:
                         if not self.enqueue(frame):
                             return
                         if caching:
-                            if self.cache_slots.acquire(blocking=False):
-                                cached.append(frame)
+                            packed = zlib.compress(frame, level=1)
+                            slots = (len(packed) + CACHE_UNIT - 1) // CACHE_UNIT
+                            acquired = 0
+                            while acquired < slots and self.cache_slots.acquire(blocking=False):
+                                acquired += 1
+                            if acquired == slots:
+                                cached.append((packed, slots))
                             else:
-                                for _ in cached:
+                                for _ in range(acquired + sum(count for _, count in cached)):
                                     self.cache_slots.release()
                                 cached.clear()
                                 caching = False
@@ -110,13 +126,13 @@ class Clip:
                     break
                 if cached:
                     while not self.cancelled.is_set():
-                        for frame in cached:
-                            if not self.enqueue(frame):
+                        for packed, _ in cached:
+                            if not self.enqueue(zlib.decompress(packed)):
                                 return
         except (OSError, cv2.error):
             pass
         finally:
-            for _ in cached:
+            for _ in range(sum(count for _, count in cached)):
                 self.cache_slots.release()
             self.enqueue(None)
 
@@ -148,7 +164,7 @@ class ClipPool:
     def __init__(self, chroma):
         self.clips = {}
         self.chroma = chroma
-        self.cache_slots = threading.BoundedSemaphore(CACHE_LIMIT // FRAME_BYTES)
+        self.cache_slots = threading.BoundedSemaphore(CACHE_LIMIT // CACHE_UNIT)
 
     def acquire(self, key):
         if key not in self.clips:

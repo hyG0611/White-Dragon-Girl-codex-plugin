@@ -335,7 +335,7 @@ class Pet(QWidget):
     def play(self, name):
         if name not in self.actions:
             raise ValueError('Unknown animation: ' + name)
-        key = (self.actions[name], self.speed, None if name == self.idle else object())
+        key = (self.actions[name], self.speed, None if name in (self.idle, '睡觉-循环') else object())
         capture = self.pool.acquire(key)
         self.release_clip()
         self.clip_key, self.cap = key, capture
@@ -434,7 +434,7 @@ class Pet(QWidget):
                 self.timer.stop()
                 self.say('待机动画无法解码，请切换角色或检查素材。')
                 return
-            self.play(self.idle)
+            self.play('睡觉-循环' if self.current == '睡觉-开始' and '睡觉-循环' in self.actions else self.idle)
             return
         if frame is not None and frame is not self.pixmap:
             self.pixmap = frame
@@ -923,7 +923,7 @@ class Pet(QWidget):
 
     def interact(self):
         if self.current == self.idle and self.offset is None and self.cap is not None:
-            self.play(random.choice(list(self.actions)))
+            self.play(random.choice([name for name in self.actions if not name.startswith('睡觉-')]))
             if not self.message and self.settings.value('self_talk', False, type=bool):
                 lines = self.settings.value('self_talk_lines', [], type=list)
                 self.say(random.choice(lines or ['休息一下吧。', '我在这里陪着你。', '今天也一起加油。']))
@@ -986,7 +986,7 @@ class Pet(QWidget):
                 QTimer.singleShot(100, QApplication.quit)
             elif command != 'state':
                 raise ValueError('Unsupported command')
-            result = {'running': True, 'animation': self.current, 'animations': sorted(self.actions),
+            result = {'running': True, 'role': self.role, 'animation': self.current, 'animations': sorted(self.actions),
                       'activity': self.activity_state[0], 'activity_sessions': self.activity_state[1]}
         except Exception as exc:
             result = {'error': str(exc)}

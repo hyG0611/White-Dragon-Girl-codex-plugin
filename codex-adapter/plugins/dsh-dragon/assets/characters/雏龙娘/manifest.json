@@ -1,0 +1,2618 @@
+[
+  {
+    "name": "吃重阳糕",
+    "file": "吃重阳糕.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42721,
+    "sha256": "6461d874d00c98cc4074cbf588c364a8a521f655bc359ff3d1905cdc1c853711",
+    "bytes": 1190662,
+    "webm": {
+      "file": "吃重阳糕.webm",
+      "bytes": 1387528,
+      "sha256": "74c5b7d11fb2bb0a2309b997d7f675ca750c904ab0dea7f71dda729d48df6e8f",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃西瓜",
+    "file": "吃西瓜.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42882,
+    "sha256": "29f70c973e4f093407858cdb2273feb8ff5965a7bc6a7b26251dca952b6ef4fa",
+    "bytes": 1131587,
+    "webm": {
+      "file": "吃西瓜.webm",
+      "bytes": 1239762,
+      "sha256": "5188d61bec2f5381d5d7addcce3a51cc5b8162791cd6dc5024dcb63f4500e29b",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "涮火锅",
+    "file": "涮火锅.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42627,
+    "sha256": "5b21412993fd09d409bb6e683839ca91648764bd94a1066140b34eb6598e24f3",
+    "bytes": 1178197,
+    "webm": {
+      "file": "涮火锅.webm",
+      "bytes": 1365865,
+      "sha256": "629382cc1e1337a327feec86c70cbfb16568449040161ceb6ce7e7214bedcf13",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃大闸蟹",
+    "file": "吃大闸蟹.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42206,
+    "sha256": "563552073c1d60ec33277ad57c26c21b081bf4ff9c3c7cda8458c228ca7aa2f6",
+    "bytes": 1152958,
+    "webm": {
+      "file": "吃大闸蟹.webm",
+      "bytes": 1244257,
+      "sha256": "0019284aa38d875bcc121196aab97438e8b88b55e9d4b6a3dea1e2807d922a5a",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "是啊，吃什么",
+    "file": "是啊，吃什么.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42473,
+    "sha256": "28554de08300833c1d83f181f224e1a67847d2ae01a2e76fb3449bf5076af086",
+    "bytes": 1351397,
+    "webm": {
+      "file": "是啊，吃什么.webm",
+      "bytes": 1597116,
+      "sha256": "4cf0f005fde47807bfab8f9ee29edca9434f246e47983639d59a0e6c7ab67744",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "收红包",
+    "file": "收红包.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42665,
+    "sha256": "0b28a255265339ba2c596e66d74ff4a56e1fc08c5bce789df3ce3f133bacda66",
+    "bytes": 1189939,
+    "webm": {
+      "file": "收红包.webm",
+      "bytes": 1337044,
+      "sha256": "59fb749b58df74f20c8a28ea3e9a08377fc4861465be58c184a8ba139c989eac",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "舞狮头",
+    "file": "舞狮头.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42856,
+    "sha256": "e718cdabdafe095c041858924e850744278230446d955e5556739d54b4954f67",
+    "bytes": 1270482,
+    "webm": {
+      "file": "舞狮头.webm",
+      "bytes": 1463753,
+      "sha256": "8940b44b08cf78ba57f55ca8f135911be55a9673b8f9e7aa02b4fe7afa0bc99c",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "写福字",
+    "file": "写福字.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42432,
+    "sha256": "b3aae10f0731feb4e558faf48939334c897d8c7b077a7207e93ade81233e2151",
+    "bytes": 1198771,
+    "webm": {
+      "file": "写福字.webm",
+      "bytes": 1258659,
+      "sha256": "266f69918a19c97d9365815740078ce8a5e63701a46504c836da8562c5c0ce06",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "穿针乞巧",
+    "file": "穿针乞巧.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43249,
+    "sha256": "565e1e1420958bfb6a1818dd65b4d555c30ef1bf3b40361162da582a29ad2241",
+    "bytes": 1144226,
+    "webm": {
+      "file": "穿针乞巧.webm",
+      "bytes": 1242066,
+      "sha256": "c00e244dee19ce45cbe204356d6c6d0bda6ef3c744dfaa885e6d113da58c8691",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "装点圣诞树",
+    "file": "装点圣诞树.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42935,
+    "sha256": "9d51b57ef54b94593f9c60c305e5e1b5214aacc7e7ecb3aecdc467fc3ef95add",
+    "bytes": 1173868,
+    "webm": {
+      "file": "装点圣诞树.webm",
+      "bytes": 1299487,
+      "sha256": "3833d4bd75ade5fb92e2ff8ac47266abb4932871092b82bf6223e920d1edd3de",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "讨糖南瓜灯",
+    "file": "讨糖南瓜灯.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42913,
+    "sha256": "da0302b58180c93f47d3a140dbdcaeb1389468c55ca27d1eb7a01b4188938bee",
+    "bytes": 1132180,
+    "webm": {
+      "file": "讨糖南瓜灯.webm",
+      "bytes": 1233357,
+      "sha256": "9a7c6a12eca6d50f964bf26a8d1e0c9c23e77f7f8fb9be2b6dee944aa599e92c",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "插茱萸赏菊",
+    "file": "插茱萸赏菊.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42689,
+    "sha256": "8a75f7e9cf4574fc2dd4f44d0a1da0af120aedffacd9b8763ba5044b3112d7cc",
+    "bytes": 1148743,
+    "webm": {
+      "file": "插茱萸赏菊.webm",
+      "bytes": 1238281,
+      "sha256": "d332101cd78c8a1d8fd48612713215eec2626f93a7c678825bc0f2f62c2fc9f3",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "放河灯",
+    "file": "放河灯.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42495,
+    "sha256": "e1ded7997d075a084438a1ff3d80a30c1b41e0a6e4c433888e8be8d52c9aaf42",
+    "bytes": 1132712,
+    "webm": {
+      "file": "放河灯.webm",
+      "bytes": 1291768,
+      "sha256": "32fe1a391283d536d6d7ea97643d0e79dde3d6963a6a00a42505a3b3ad463f26",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "萌化小幽灵",
+    "file": "萌化小幽灵.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.4253,
+    "sha256": "33565f05d55fdbc4eabd5a2ac3939785eef3220ca173ee369d35c36d011fd782",
+    "bytes": 1168742,
+    "webm": {
+      "file": "萌化小幽灵.webm",
+      "bytes": 1348608,
+      "sha256": "c05dc50410ace24b9bbee44eb166ded6f38c4e5925d7ad2de451568db1801930",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "放孔明灯",
+    "file": "放孔明灯.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42919,
+    "sha256": "340ecf1ecf9a2fe034ee7ff82d82c19fe0682cae040980c3eb860dc5f8a8638d",
+    "bytes": 542232,
+    "webm": {
+      "file": "放孔明灯.webm",
+      "bytes": 1370181,
+      "sha256": "d81da4079ca264aa1cf60176b6f38f54aee1a2d099cdc7b13dd052c70f1f01ab",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "骑木马",
+    "file": "骑木马.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43272,
+    "sha256": "4d54f279b81fbf321e7aeeb838d8d632fa311a8974a2a5b6852b21400a294124",
+    "bytes": 545354,
+    "webm": {
+      "file": "骑木马.webm",
+      "bytes": 1306020,
+      "sha256": "c015036e77819888501226e95ab09625b4347f32759f8cc5265ea3f13e71eae7",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "变鸽子",
+    "file": "变鸽子.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43202,
+    "sha256": "dcb6eb2d0064141bcab74cd4dd76e6a317df4ab93d367b1a364543369ea69e79",
+    "bytes": 567713,
+    "webm": {
+      "file": "变鸽子.webm",
+      "bytes": 1445965,
+      "sha256": "6197bb1919dba21fe3e7a10719f77f4233c7c73c8a372d204c3400a244974062",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "凭空生花",
+    "file": "凭空生花.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.4341,
+    "sha256": "99e7ab079e9f46bda2886035ec31de72c0bcb96dab7645ca587a460a06f29965",
+    "bytes": 541644,
+    "webm": {
+      "file": "凭空生花.webm",
+      "bytes": 1258556,
+      "sha256": "94a1bea3b12bc8aa5ef518ec000acd82ca7a2814204a3b215c995a920746e8de",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "扑克魔术",
+    "file": "扑克魔术.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.4309,
+    "sha256": "a97d36f0646e3423e8bc4038e0098380daf4e99a553e9e085f8ed5b94c7001ef",
+    "bytes": 570221,
+    "webm": {
+      "file": "扑克魔术.webm",
+      "bytes": 1405857,
+      "sha256": "fde37a4fa16751cd73b4d05591cd2e9ea63a8a6b0b38940c264ef5ab7a72a8ac",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吹笛子",
+    "file": "吹笛子.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43249,
+    "sha256": "aaf4ffe6bb842a0b79451f75bf9ecd9a9c6f3a33c19344f97ca770d575769924",
+    "bytes": 539771,
+    "webm": {
+      "file": "吹笛子.webm",
+      "bytes": 1209327,
+      "sha256": "fa6c350080215336eab0253fcc336d4ef4f0dbcae61142bfee9f4d9d11126d9e",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "三球抛接",
+    "file": "三球抛接.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42695,
+    "sha256": "0ee16b4185f19c9e93426dbf9a7d8f938c20ae3ce7c4fa0f5deeb188350d4f5e",
+    "bytes": 573939,
+    "webm": {
+      "file": "三球抛接.webm",
+      "bytes": 1330428,
+      "sha256": "b46568e6d563434349f5660383845707b55ffa20e93471fe61446a43654a6477",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "蝴蝶蜜蜂环绕头顶开花",
+    "file": "蝴蝶蜜蜂环绕头顶开花.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43479,
+    "sha256": "276e48bb2c4eca4eb862dcf283b9b064bd3a87662c3139babf3ef3b86e90eada",
+    "bytes": 603177,
+    "webm": {
+      "file": "蝴蝶蜜蜂环绕头顶开花.webm",
+      "bytes": 1418812,
+      "sha256": "08ec45e634cd5af481bcdb8685cb295b590f86e734fe70d46479354874e71b20",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "晨间刷牙",
+    "file": "晨间刷牙.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43082,
+    "sha256": "02c67ae0c8b31982a03d0fbcfa76aad887ea2a6decc69781fb6f5c372fc4eff0",
+    "bytes": 544801,
+    "webm": {
+      "file": "晨间刷牙.webm",
+      "bytes": 1233516,
+      "sha256": "30ff4439fefec492fb6e6ab825e37722e62248ebeb567fdc2bbab67ebabb5512",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "撸猫",
+    "file": "撸猫.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43278,
+    "sha256": "6871041e7dbe13b489a4d8c082d11f959c2ee870355176b0ec58b08aafc41cc1",
+    "bytes": 586636,
+    "webm": {
+      "file": "撸猫.webm",
+      "bytes": 1253337,
+      "sha256": "22f0f6fd413322291ac8884f8c9b047a850164da4bb08796b3a34d93caa4bc46",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "踢毽子",
+    "file": "踢毽子.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43241,
+    "sha256": "7fa7939144a352a31c66c3d12f8ecda7d932d34dc164669f94f9c0746690a297",
+    "bytes": 584735,
+    "webm": {
+      "file": "踢毽子.webm",
+      "bytes": 1446006,
+      "sha256": "c0d13d92d4699deabb8831d92fa7361019a899034e45db0da4cc8939beddb983",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "抽陀螺",
+    "file": "抽陀螺.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43868,
+    "sha256": "0eaead1bcd9e8887724c48b2fbe45ca721b5bef59ce22882dd7a04dc51e7bc30",
+    "bytes": 633029,
+    "webm": {
+      "file": "抽陀螺.webm",
+      "bytes": 1582804,
+      "sha256": "a66dea8832405f8637f1725dd03dfe84a67a888365c538609005e2d711c6d356",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "下五子棋",
+    "file": "下五子棋.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43261,
+    "sha256": "48514178355469ab1fb2fa38745ee4609198d10ab47ad9d88c0f98c841115c7b",
+    "bytes": 543831,
+    "webm": {
+      "file": "下五子棋.webm",
+      "bytes": 1261283,
+      "sha256": "78c802873a7c6c2411a163452ec50bbf6d9f8322b1e1fef319fdadad323fb163",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "荡秋千",
+    "file": "荡秋千.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43417,
+    "sha256": "1f00414e464ffd0e769f9531d66d5060319c32725b33ed84253e76d713679122",
+    "bytes": 693277,
+    "webm": {
+      "file": "荡秋千.webm",
+      "bytes": 1681245,
+      "sha256": "89b1d606db8d96c4b7f1d25c04e9e54a608c76aaaacafa5534c170541caa06fc",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "点击回应-挠痒咯咯笑",
+    "file": "点击回应-挠痒咯咯笑.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42824,
+    "sha256": "10b77763d84ecd70625676a550f31be0f652800924ded4522b8dfb5467e375a8",
+    "bytes": 558275,
+    "webm": {
+      "file": "点击回应-挠痒咯咯笑.webm",
+      "bytes": 1351205,
+      "sha256": "d9401e23c2a8a71863aa3327b3d1b5ed80872c8686fe6c82e8c7452991ef45c1",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "点击回应-元气挥手",
+    "file": "点击回应-元气挥手.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43105,
+    "sha256": "935812ef400e40974309448c10fc277c19027b58776c5abf1ea5c5e7a2dea058",
+    "bytes": 555887,
+    "webm": {
+      "file": "点击回应-元气挥手.webm",
+      "bytes": 1327605,
+      "sha256": "d7df0ec9e08018d8631dbf1b03f862ba246eefc2633eea42988e08685e2ff477",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "余额-钱袋满溢",
+    "file": "余额-钱袋满溢.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43641,
+    "sha256": "04446f27ae3dfb1bc54ec64e7f4dc36a71e0aa0debae8efb7433392cac66414a",
+    "bytes": 577485,
+    "webm": {
+      "file": "余额-钱袋满溢.webm",
+      "bytes": 1275203,
+      "sha256": "93e3e909d17bd7e062994d84290a46de464fb27126b99956fbcc318905bd29b0",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "余额-金袋叮当",
+    "file": "余额-金袋叮当.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43183,
+    "sha256": "b21aa4c94df9e6d5bbd487367db53d504ba6365953270c5eb7350e3b99edb520",
+    "bytes": 571722,
+    "webm": {
+      "file": "余额-金袋叮当.webm",
+      "bytes": 1319119,
+      "sha256": "76e55b129d335622a3dd057366c2fb897d3e3ffc16e0c759ac529fd4214f8383",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "余额-钱袋如常",
+    "file": "余额-钱袋如常.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42963,
+    "sha256": "eb8024ad9e7432e0ff5cdaef06591f9ce3b64fc0a6362d9af02ee5218f9c5235",
+    "bytes": 562254,
+    "webm": {
+      "file": "余额-钱袋如常.webm",
+      "bytes": 1216861,
+      "sha256": "59b3fd5e87a5ab1dba7a0326f1d352e08114991eeb3dc1c4e08f281fd1d114c3",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "余额-数金皱眉",
+    "file": "余额-数金皱眉.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43185,
+    "sha256": "eefddeadcc6fb39c89d0b1929e1a4bd6205467a0b84a07b918715d0181587a41",
+    "bytes": 538100,
+    "webm": {
+      "file": "余额-数金皱眉.webm",
+      "bytes": 1221040,
+      "sha256": "7632390b5e991ea4bdb0c861958f1bcec8bd8b1c623ad455f117acd83960f2b0",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "余额-袋空如洗",
+    "file": "余额-袋空如洗.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43125,
+    "sha256": "02d1d18742cd1b8e6701df3fadf366f7aeca0baaadbbb7ee11589e5e6206d0c7",
+    "bytes": 567172,
+    "webm": {
+      "file": "余额-袋空如洗.webm",
+      "bytes": 1221637,
+      "sha256": "d4cd7d46c22c8913def887b66b52341901c22e7ea02508d90d9e35327c7f46ab",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "余额-分文不剩",
+    "file": "余额-分文不剩.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42782,
+    "sha256": "b60e93f17baabd8a92519b1e5ffb0ff85934b73d603a4557d2e77eda7d03b034",
+    "bytes": 542291,
+    "webm": {
+      "file": "余额-分文不剩.webm",
+      "bytes": 1204858,
+      "sha256": "ee610303365f487b66b42df5354609d419e7b7355010af0e9b41c02f7a6dc235",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "碎碎念-擦桌碎碎念",
+    "file": "碎碎念-擦桌碎碎念.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.436,
+    "sha256": "727815a41b616607c0e38f32e6097c188d137e173b59161460197988aa2ed403",
+    "bytes": 641288,
+    "webm": {
+      "file": "碎碎念-擦桌碎碎念.webm",
+      "bytes": 1546077,
+      "sha256": "c3e644300db3e6339fc567c6296d4a38329f82059a020b4a4933149e51dcd946",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "碎碎念-发呆碎碎念",
+    "file": "碎碎念-发呆碎碎念.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42976,
+    "sha256": "89693e67e0296410cdb45babd1a67dace21f58a05d0374574dcbf3e0096ba096",
+    "bytes": 626580,
+    "webm": {
+      "file": "碎碎念-发呆碎碎念.webm",
+      "bytes": 1492274,
+      "sha256": "57dc395131692736c92e22421bc6ebc85ee68d11753469d36bf08a9709080a4e",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "碎碎念-对屏碎碎念",
+    "file": "碎碎念-对屏碎碎念.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.4315,
+    "sha256": "deefc77f3012d66754a9610bd888255d4a974b132706a2a2cc7f12f9f994cb54",
+    "bytes": 600022,
+    "webm": {
+      "file": "碎碎念-对屏碎碎念.webm",
+      "bytes": 1343628,
+      "sha256": "31226153a100bda1e5b130970bead2830395740781848c6799809380823c2ec9",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "工作状态-思考冒泡",
+    "file": "工作状态-思考冒泡.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.4276,
+    "sha256": "fb0250e6a2ee2d9a4deef0f4c97e4e31eafdd34e585161c06ac0ad9d5936e79d",
+    "bytes": 558059,
+    "webm": {
+      "file": "工作状态-思考冒泡.webm",
+      "bytes": 1349124,
+      "sha256": "5e360226d167dfbd8d556c188283c8d10acb74ee3e974519b74c2fb2317c5f0c",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "工作状态-忙碌点按",
+    "file": "工作状态-忙碌点按.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42407,
+    "sha256": "5f4659be4774b14ddfc2a992cf6a10e3c3645aebfef8f3022e9c8ec3d85a37f0",
+    "bytes": 571774,
+    "webm": {
+      "file": "工作状态-忙碌点按.webm",
+      "bytes": 1306727,
+      "sha256": "a1b0beb2b80ec740485d7804aaa3721de179e7f64078f3470f19ecd0040e18d9",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "工作状态-清点归档",
+    "file": "工作状态-清点归档.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42834,
+    "sha256": "27d8a42aa14217ec181f39979350becc480214598dc53a2287fed029faa3202e",
+    "bytes": 638653,
+    "webm": {
+      "file": "工作状态-清点归档.webm",
+      "bytes": 1412934,
+      "sha256": "5563b9d043dd5d1d1fb980a0b61a1abb98c932228bebc2349d92ef769de54da7",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "工作状态-原地踱步张望",
+    "file": "工作状态-原地踱步张望.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42965,
+    "sha256": "39126308e81e6886b4d28666fe8cba3adcc56b617c46876364bc57f54872eece",
+    "bytes": 634506,
+    "webm": {
+      "file": "工作状态-原地踱步张望.webm",
+      "bytes": 1426872,
+      "sha256": "5e427c4a0c24577a47d57a621b51b4251f24b9dba9013fffba7921af0b88fe72",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "工作状态-雀跃庆祝",
+    "file": "工作状态-雀跃庆祝.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.4276,
+    "sha256": "6bbd8068619cafd59e6ed681b815e492e33e812329beacc97800968b767e559c",
+    "bytes": 600357,
+    "webm": {
+      "file": "工作状态-雀跃庆祝.webm",
+      "bytes": 1500303,
+      "sha256": "c9c5f346e8d77ff5577467a9535fa91a74e626644b4b0b308ecbb8ab8f496ef6",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "工作状态-垂头叹气冒汗",
+    "file": "工作状态-垂头叹气冒汗.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43001,
+    "sha256": "b4aac20e137937bf6eec97c78052c5a81b2f13676d760f5ac0935a5e7fae93c0",
+    "bytes": 597181,
+    "webm": {
+      "file": "工作状态-垂头叹气冒汗.webm",
+      "bytes": 1400905,
+      "sha256": "ffc1a20035cd25a28d749d790f6ae3f39fd5f5297ebde286e026a05c5e463ceb",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "睡觉-开始",
+    "file": "睡觉-开始.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 9.10267,
+    "sha256": "83a54a634884671181ac9dd05520c60338e4b9d38b42fb79e058c2124be01746",
+    "bytes": 468067,
+    "webm": {
+      "file": "睡觉-开始.webm",
+      "bytes": 1024340,
+      "sha256": "955a62e6bf5f69bb66d9f8eee7cf733dc4d01fd21cd46f18fd41f70cf1fe5b51",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "睡觉-循环",
+    "file": "睡觉-循环.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.39178,
+    "sha256": "14901912bb0258a57cdadf697b6b0c9ed0e18734b1ebe945bd46ec452cedd0c5",
+    "bytes": 247787,
+    "webm": {
+      "file": "睡觉-循环.webm",
+      "bytes": 345568,
+      "sha256": "eb4757d48a723bdf4b5584630ff0cca3cbafcca347fed2a5df71782e5e0a4519",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "睡觉-起来",
+    "file": "睡觉-起来.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 9.11167,
+    "sha256": "b74fdbddaedd69926bad4484754c67a9bd9f33ecb17a2f68d9a9be60a0bf2217",
+    "bytes": 569238,
+    "webm": {
+      "file": "睡觉-起来.webm",
+      "bytes": 1308175,
+      "sha256": "73817a2bb8565d0ac98821dfc4d31862e9e12fe589ee989b5b467ad2ebf759d3",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "待机呼吸休闲",
+    "file": "待机呼吸休闲.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.4094,
+    "sha256": "03cc37da8c50d0a6d4023d59d9cfbe4448659411f7707d0c73ed74ae7f0da2a7",
+    "bytes": 524284,
+    "webm": {
+      "file": "待机呼吸休闲.webm",
+      "bytes": 1168198,
+      "sha256": "a702879a42444a9c8c5f3bae72055528db40856108ec106979620bff87fb7edc",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "原地小憩沉眠",
+    "file": "原地小憩沉眠.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43185,
+    "sha256": "2ee21855ea75ff983c18befa762255504b1641bad17db77062ce13b0a08633d8",
+    "bytes": 515019,
+    "webm": {
+      "file": "原地小憩沉眠.webm",
+      "bytes": 1317714,
+      "sha256": "073083af093b011744cabaf5094aa621d387dffe33d8f675511cd8852ea57ae1",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "原地漂浮踏步",
+    "file": "原地漂浮踏步.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43361,
+    "sha256": "7c8971fd83ea7a7319a12b86b9208d5eedef8c525e841dfdd127d91fcb1e3a49",
+    "bytes": 541090,
+    "webm": {
+      "file": "原地漂浮踏步.webm",
+      "bytes": 1246760,
+      "sha256": "be9aca49e6cf9f1828d54ea9c8f7cdf18afd692be771895b671b5fb7fa35153d",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "点击回应-开心跃动",
+    "file": "点击回应-开心跃动.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42777,
+    "sha256": "8718227c3dfbc7c7c4b32dbc750b191e30054a2a573f3c64f074449b9fea2e7d",
+    "bytes": 566933,
+    "webm": {
+      "file": "点击回应-开心跃动.webm",
+      "bytes": 1506921,
+      "sha256": "28cfc88751a7c253b4b617f87f55ca69f523105f0651ed040c48f69ae07e9d09",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "点击回应-害羞惊讶",
+    "file": "点击回应-害羞惊讶.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42879,
+    "sha256": "73ff17b60b1af3b39d6c5595517a1ce3ac54586b1317312788e2aefd18920801",
+    "bytes": 546479,
+    "webm": {
+      "file": "点击回应-害羞惊讶.webm",
+      "bytes": 1257472,
+      "sha256": "2ac99ceb402a5f89f364b00ce5b7bfcbfa1407c2b1f870f4a34c30594744e7cd",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "点击回应-傲娇生气",
+    "file": "点击回应-傲娇生气.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.44038,
+    "sha256": "5929285e468379af4bca8cc03d7ed31438911d36674e771f505733d32b710735",
+    "bytes": 617713,
+    "webm": {
+      "file": "点击回应-傲娇生气.webm",
+      "bytes": 1422469,
+      "sha256": "ad8be3400224b10c9f05295e46121f2db850373293397b9a83a4df86d144eaf6",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "被鼠标拖拽悬空反馈",
+    "file": "被鼠标拖拽悬空反馈.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43014,
+    "sha256": "5f66cfa33a10f98172f784617a3f42c664cece4908397ccb8494f51d9d076ccf",
+    "bytes": 519375,
+    "webm": {
+      "file": "被鼠标拖拽悬空反馈.webm",
+      "bytes": 1286123,
+      "sha256": "2a4793f2235a30ff3005ac8e2354067cfba331dc65561c379d91b4fa9aed1284",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "女仆屈膝礼仪",
+    "file": "女仆屈膝礼仪.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42917,
+    "sha256": "fa39b499d2c9fdb9f9e36e60bfdf76ea7e86bea9f20519d4ff71193061be5686",
+    "bytes": 499555,
+    "webm": {
+      "file": "女仆屈膝礼仪.webm",
+      "bytes": 1147622,
+      "sha256": "4ae1955a63b1db70cf2a22e17fefce1e4bbff45d61244089aca4e25ba8b7a2d2",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "鲸鱼吐泡泡特效",
+    "file": "鲸鱼吐泡泡特效.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43604,
+    "sha256": "75ded145b4d61ef0faae25c059956c05da970f6123be3c35773df615360a4311",
+    "bytes": 570679,
+    "webm": {
+      "file": "鲸鱼吐泡泡特效.webm",
+      "bytes": 1399981,
+      "sha256": "c10869f242d8b0b0926724142d722af72edf9f77e57b64ade9630fe255971b53",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "超大伸懒腰",
+    "file": "超大伸懒腰.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43084,
+    "sha256": "4fc99865bcf1a69a15057223849bbcd6707d3535cf86d318c21a66f1483d9655",
+    "bytes": 488683,
+    "webm": {
+      "file": "超大伸懒腰.webm",
+      "bytes": 1168762,
+      "sha256": "d16d1a6fd44baa7ea1002920b96c64fa1c94c13fafd8ffe21033247fc6f41d39",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "小幅度原地360度旋转展示",
+    "file": "小幅度原地360度旋转展示.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42514,
+    "sha256": "6e60a68f43222f3e15c1218d0c69259317740ad0e26a7fa3fa978013efd4f9e1",
+    "bytes": 524218,
+    "webm": {
+      "file": "小幅度原地360度旋转展示.webm",
+      "bytes": 1258666,
+      "sha256": "6cfb98a4626dc673933df0221c22c6dcd695b49b64b0cda80a95013bcf11431f",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "原地跳跃抓碎头顶物品",
+    "file": "原地跳跃抓碎头顶物品.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43391,
+    "sha256": "c9f037fdae40a28b7a570fceac7497db7d2874b4168ba1a2b786e5de20b97897",
+    "bytes": 538130,
+    "webm": {
+      "file": "原地跳跃抓碎头顶物品.webm",
+      "bytes": 1442904,
+      "sha256": "f168ae4d70079c4794be51c1f744a4d0881a0956d8c0300ba8af638309cecc3a",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "原地重力下蹲压缩",
+    "file": "原地重力下蹲压缩.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43342,
+    "sha256": "e9f60d8707664e5fd484cec136bac480f877398d44fab32da64bcb78349ef469",
+    "bytes": 567848,
+    "webm": {
+      "file": "原地重力下蹲压缩.webm",
+      "bytes": 1418453,
+      "sha256": "ceea06ef15b8083a8bc0150aa551eab9ec9a9389917e021873a6b684fe0f07d0",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "原地敲击桌面互动",
+    "file": "原地敲击桌面互动.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42924,
+    "sha256": "91378745e92ae21e27a323651f1c72f1ecbf66ba7cdd3fa3698d5c5a905079e0",
+    "bytes": 558845,
+    "webm": {
+      "file": "原地敲击桌面互动.webm",
+      "bytes": 1336952,
+      "sha256": "11cf6fd908cb409e5f8bfb90f7c54e68d28385aca70c2025b3f807d7926b4a9b",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "原地专心玩魔方",
+    "file": "原地专心玩魔方.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43045,
+    "sha256": "bcf5c55fbb1a382fb641b9ea6cb4c6268a4de324ebde07dd8458d57f7d62bad7",
+    "bytes": 544420,
+    "webm": {
+      "file": "原地专心玩魔方.webm",
+      "bytes": 1286354,
+      "sha256": "7763a31c9ce982d57aa2bcee5a028caf87edcdef834d06e91b237cb1a00bd797",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "原地蹲下玩玩具汽车",
+    "file": "原地蹲下玩玩具汽车.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42691,
+    "sha256": "8fa11eff0fe05397d905402b14998a2615b9a0399ba48c92474208251d0098eb",
+    "bytes": 601381,
+    "webm": {
+      "file": "原地蹲下玩玩具汽车.webm",
+      "bytes": 1347381,
+      "sha256": "242e3065d7d8a5ce3176ab06a62de4987349f82d9360f1dc59db66fed87b8ada",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "玩游戏气急败坏",
+    "file": "玩游戏气急败坏.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43202,
+    "sha256": "f6c7bcf036d5ef0860a3e7b5907a056169e6f05a62aad77997eabd66141c7e4f",
+    "bytes": 597227,
+    "webm": {
+      "file": "玩游戏气急败坏.webm",
+      "bytes": 1454867,
+      "sha256": "ea1144405baa99f25e1db2ed3e942ef00b9a17375a45b132df1bf918123f3a86",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "被吓一跳",
+    "file": "被吓一跳.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42857,
+    "sha256": "19ecf175ff190c5ee1161cb24877c41ac419127d2f7aa9c9d1cb79dfc46c00fc",
+    "bytes": 526698,
+    "webm": {
+      "file": "被吓一跳.webm",
+      "bytes": 1339758,
+      "sha256": "5fb5bc3e5dc167f6e5bd609d3a2823d447d251637641477c870fd2aec14db3ed",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "偷吃零食被抓住",
+    "file": "偷吃零食被抓住.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42813,
+    "sha256": "8298c08f8c4a5adf221a69df0654f82d4263d7636bb02d9edd13338112b6752a",
+    "bytes": 542307,
+    "webm": {
+      "file": "偷吃零食被抓住.webm",
+      "bytes": 1274625,
+      "sha256": "9889b8dc7495f9ce44b9a16a355d2828d4f40b55d88d28232bad5b3ce56b4160",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "用鲸鱼尾巴拍打地面",
+    "file": "用鲸鱼尾巴拍打地面.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42896,
+    "sha256": "9712d6e786d81be9dbb5fcc3153a60de594c5c271fb4fea9e56c99d07230b1c6",
+    "bytes": 572406,
+    "webm": {
+      "file": "用鲸鱼尾巴拍打地面.webm",
+      "bytes": 1303910,
+      "sha256": "4b85b0d8bd6a5a181b15a0a2159b552b74cd44b98f2ebab6f25c2d4065447d9c",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "哈欠连天",
+    "file": "哈欠连天.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42789,
+    "sha256": "b549dddb352b7753556759fca95bf706787b5b31a6d7a4d892d67b3f5bbed9d4",
+    "bytes": 535980,
+    "webm": {
+      "file": "哈欠连天.webm",
+      "bytes": 1347692,
+      "sha256": "d1348f1c1a5b6f38f167ea87605673a28277e795a26dc4c9571c76f85cf409e4",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "打瞌睡被惊醒",
+    "file": "打瞌睡被惊醒.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42633,
+    "sha256": "e193d9ebedc579af79180645a680eb9043fa5cdf427f2c3b83ad56955abd5ccf",
+    "bytes": 650518,
+    "webm": {
+      "file": "打瞌睡被惊醒.webm",
+      "bytes": 1500366,
+      "sha256": "b1b184644da807e9371eaa3e2a974028ec1f54e93f16db46da6a6341c6105e81",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "螃蟹走路",
+    "file": "螃蟹走路.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43098,
+    "sha256": "02b9b93c43764b3964561894856eac00fee11afe69e9f4a375343c01a76468ad",
+    "bytes": 578564,
+    "webm": {
+      "file": "螃蟹走路.webm",
+      "bytes": 1383693,
+      "sha256": "b32ad627c4430ced170221db86ebfde8c9d64fbe8a1be910b0ccb70d64ba6960",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "悠闲哼歌",
+    "file": "悠闲哼歌.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43256,
+    "sha256": "2715d012502512e9f36d3ed01953826ac6a205aa082cb1160df05445b6a23d07",
+    "bytes": 557832,
+    "webm": {
+      "file": "悠闲哼歌.webm",
+      "bytes": 1450005,
+      "sha256": "79ae6eb950169b9a8edd7db7159d6149a37a0128f3cadc7710c95950322f7bc7",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "东张西望",
+    "file": "东张西望.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43236,
+    "sha256": "5783bbfd433c498df906c6f845cfd26f8d66973542966afa7ab7e8a95b64db3e",
+    "bytes": 576083,
+    "webm": {
+      "file": "东张西望.webm",
+      "bytes": 1330301,
+      "sha256": "930ae2b80a82c6a219ca5ed7106ccecc7cb1fd4bae49fb33917e6d32ce9c3fd5",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "原地左转奔跑",
+    "file": "原地左转奔跑.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42946,
+    "sha256": "573172a8a7a6758bfd3b4135151d68433fa62f0d29d71c81318123b86ab9cbf2",
+    "bytes": 736677,
+    "webm": {
+      "file": "原地左转奔跑.webm",
+      "bytes": 1678204,
+      "sha256": "1e6125eee9822c81157fa9254ab32c40672708021fbf43fd1757c33223911ce6",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "玩水枪",
+    "file": "玩水枪.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43394,
+    "sha256": "941091e8eac1746d7de14d8ffa0b835ab8e5d59b761feb080b14791e1d9340d0",
+    "bytes": 605134,
+    "webm": {
+      "file": "玩水枪.webm",
+      "bytes": 1439232,
+      "sha256": "75c200a51392463a17624067de5440420f263bb985e691be2b4b3632034c4e23",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "小提琴演奏",
+    "file": "小提琴演奏.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43359,
+    "sha256": "b3647993d1af4dd14ffe237cce519914d57c6e6dfc69362848c8e00d5e81df83",
+    "bytes": 603211,
+    "webm": {
+      "file": "小提琴演奏.webm",
+      "bytes": 1440999,
+      "sha256": "58326da2cd68a3974d8590a123c484426b653dd8aff1b2cafaf25dab27fafe0a",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "蓝鲸现世",
+    "file": "蓝鲸现世.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.4297,
+    "sha256": "a991e479f725dc3947c4f746f584e555f26085afb42edfbb6babe609e4f2196d",
+    "bytes": 577900,
+    "webm": {
+      "file": "蓝鲸现世.webm",
+      "bytes": 1207404,
+      "sha256": "5dcf510e13357068c86ab4a6c6240b20e8d7f10268c15b3d938fbb2580c0b1d0",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃白饭",
+    "file": "吃白饭.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43188,
+    "sha256": "5d0bd1b39f8b673c692994c156ce4b58901beb45e824b5afe6b240554dde54d9",
+    "bytes": 585775,
+    "webm": {
+      "file": "吃白饭.webm",
+      "bytes": 1381490,
+      "sha256": "cca1de0684888f1639f61a4d2198bd8614ac6eb513fc23288ec72ae41c5d814b",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "深度思考碎碎念",
+    "file": "深度思考碎碎念.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42448,
+    "sha256": "7ae3e0c4e7ac0ed2ec22390a429318124a4ebd1af200934a21a2e859c0f92235",
+    "bytes": 598611,
+    "webm": {
+      "file": "深度思考碎碎念.webm",
+      "bytes": 1432577,
+      "sha256": "fa19edd565ce9c111a7a2264360dd8dc74b020cac487e7c9e8eecde2efd29714",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "照镜子",
+    "file": "照镜子.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42435,
+    "sha256": "9624903a94cbb6260e2694179d844f1e8c62e4b976970555e46b4d8ae1783139",
+    "bytes": 552008,
+    "webm": {
+      "file": "照镜子.webm",
+      "bytes": 1358872,
+      "sha256": "92c94a017ed9803cf3243b07ccc6c9322d0b13bb189d37afe4331aceffb63b65",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "优雅女仆舞",
+    "file": "优雅女仆舞.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42696,
+    "sha256": "c7d56b3dbfc8ced6f42e75031345d30feaf5bfe826fa4c36c4a0bc09ac72d669",
+    "bytes": 588869,
+    "webm": {
+      "file": "优雅女仆舞.webm",
+      "bytes": 1478276,
+      "sha256": "374261fbca298e44ccf36f10b73256d57e700ab48fac534d950ac891baac5e85",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "可爱宅舞",
+    "file": "可爱宅舞.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43025,
+    "sha256": "ec913258276cd911bc19c79d398231d297c422a4e2e9433372fe8f212155c653",
+    "bytes": 588307,
+    "webm": {
+      "file": "可爱宅舞.webm",
+      "bytes": 1460393,
+      "sha256": "2a4d18c9cc6c739661863e75d0ca28f34809b070ed01c0d079ca6b6deed0b81f",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "轻快摇摆舞",
+    "file": "轻快摇摆舞.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42624,
+    "sha256": "0626aee24ef90296ced4f19c15901f0c87bf76f6d6c7b16af1fa4ee458547dcd",
+    "bytes": 571718,
+    "webm": {
+      "file": "轻快摇摆舞.webm",
+      "bytes": 1464318,
+      "sha256": "79613d814422f708c4cdcf1af84d68765599459f01ac3f70e664e07516056fee",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "整体换装试色",
+    "file": "整体换装试色.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43048,
+    "sha256": "7fc8ec9e35dddc8b67090b53360e08221e380229f45d5985e474b0c23dd0d23d",
+    "bytes": 554767,
+    "webm": {
+      "file": "整体换装试色.webm",
+      "bytes": 1407306,
+      "sha256": "f4692dfce196c7f77cd7fb3bd317965458fd2dec0e163128aba69f373f291bf1",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "大口吃零食",
+    "file": "大口吃零食.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43028,
+    "sha256": "659ccb6d81a051d9e719d01af0fd32cc94e0772d25e6d6d9414e64a32791cef5",
+    "bytes": 593933,
+    "webm": {
+      "file": "大口吃零食.webm",
+      "bytes": 1445880,
+      "sha256": "326d35f780dad456fe84a43b2698cbc56309b81d91675ff6551666480aa32648",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吹气球",
+    "file": "吹气球.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43753,
+    "sha256": "e4eeb236674185d95eaa43440e27c8ddd6b217163c4432e86a73a30020103f61",
+    "bytes": 612233,
+    "webm": {
+      "file": "吹气球.webm",
+      "bytes": 1546983,
+      "sha256": "c4898b81b5da781bb8a3affa9f1861e792c8341148344cb320ea1770eaef4d29",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "动物环绕",
+    "file": "动物环绕.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43783,
+    "sha256": "00e035f728de0da87a8bd5cae0fe5df5a0623da005eb3076a1bdc0b5ae228fe2",
+    "bytes": 740494,
+    "webm": {
+      "file": "动物环绕.webm",
+      "bytes": 1705023,
+      "sha256": "1bc4d76dfdb63dd596a7cca2030a1b492c7e5a2155fc5a33322665c1f26e64fe",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "轻快记录",
+    "file": "轻快记录.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42951,
+    "sha256": "6486de53ad31216699704f4c5ff5184f0e50c4cdf54da04dbb551824df78e78e",
+    "bytes": 576026,
+    "webm": {
+      "file": "轻快记录.webm",
+      "bytes": 1404461,
+      "sha256": "9372c05adb8cd2ebb5fd486c21d8ac8fc661f55c3ad92e7690553c0de258c2f3",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "写代码",
+    "file": "写代码.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42881,
+    "sha256": "e542f874546ff065fa35b5cc0a0133160859fc818f485ef1600deb32fd85c385",
+    "bytes": 526048,
+    "webm": {
+      "file": "写代码.webm",
+      "bytes": 1294436,
+      "sha256": "c8a745dbd877195b2066a85a7f0e3fab22adfe18e4c48fb072be43b8447de746",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃Token",
+    "file": "吃Token.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43266,
+    "sha256": "0349038d2b6dfb915348bb80f71d6f6ffa81ec31f53ff4e1c0d3220defc55d74",
+    "bytes": 571989,
+    "webm": {
+      "file": "吃Token.webm",
+      "bytes": 1450223,
+      "sha256": "14877f0a232227d97d51906fcbdd38103e0f10fa96407b6853d64e32f4c5c96a",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃早餐",
+    "file": "吃早餐.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42601,
+    "sha256": "9cd8b5b167b88b4ed4a76c4b06317637f2dfd541536b050cda51bf01e312e17e",
+    "bytes": 569601,
+    "webm": {
+      "file": "吃早餐.webm",
+      "bytes": 1241903,
+      "sha256": "0ce35fc60dcc3ac6c0bd6e400a14347367ec679ebe5a8d5d668fb8148ec0a864",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃午餐",
+    "file": "吃午餐.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42888,
+    "sha256": "fc21ca6bafcb5dbd68ad8cce25773fa71129818c6d27057bc943f542feb14827",
+    "bytes": 558963,
+    "webm": {
+      "file": "吃午餐.webm",
+      "bytes": 1302396,
+      "sha256": "7a2b8f4e13dbbb0be99b9c3ca67e3bbb64dc0804757ffc11abf819881779799c",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃晚餐",
+    "file": "吃晚餐.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.4269,
+    "sha256": "2a03b529dd78dee76e53ce7b24d873fe1d8792232913bd07561288c72381e619",
+    "bytes": 559952,
+    "webm": {
+      "file": "吃晚餐.webm",
+      "bytes": 1283717,
+      "sha256": "8a549ef704f91dc64754a7268ddbaccd99c709f3a0147fb128e8d44e9e5f8b85",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "放风筝",
+    "file": "放风筝.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43107,
+    "sha256": "2896b128ee5f8ce4045be16406fcb2a0884a101545e96677dddfbfbd0f4b25b4",
+    "bytes": 625625,
+    "webm": {
+      "file": "放风筝.webm",
+      "bytes": 1574335,
+      "sha256": "7de663012d85f1616d7075daaeb9d17b5a8cd040209af2ade4727236bc2bbce1",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "摇扇纳凉",
+    "file": "摇扇纳凉.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43504,
+    "sha256": "dc611019924e2af429fef20a3f184f7ad90c5f976992a5b890285f11bda2ed28",
+    "bytes": 562720,
+    "webm": {
+      "file": "摇扇纳凉.webm",
+      "bytes": 1387091,
+      "sha256": "c64aecb2799b1ca705f3957685d8f7f463a6a65bd567f70ef50720191a0ec111",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃冰淇淋融化",
+    "file": "吃冰淇淋融化.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43002,
+    "sha256": "2e92a7aa4d2a8eede6d9e7435fca5f6a81f790bf909bc4bb809a8563b9a8fdbe",
+    "bytes": 582630,
+    "webm": {
+      "file": "吃冰淇淋融化.webm",
+      "bytes": 1283577,
+      "sha256": "ada6bec19318e437e70c1aba1b934623719cc6cf8d3a971fd9ddd3a7f5c08616",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "被落叶淹没",
+    "file": "被落叶淹没.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42509,
+    "sha256": "0ab7c148af434d3822e5bfcfdbee0d11643f403f5349e073682b3d3edb0bf300",
+    "bytes": 699283,
+    "webm": {
+      "file": "被落叶淹没.webm",
+      "bytes": 1755917,
+      "sha256": "d0ce7b68be1ab3b6af8dedba088429d0af133cc8e05d32b2170161f6bb665e76",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "中秋赏月吃月饼",
+    "file": "中秋赏月吃月饼.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43244,
+    "sha256": "a8b65e568ae3e236d8a98e03e3ecc6bbad9e1263c5c630ef6f45ae5d00a74b80",
+    "bytes": 563219,
+    "webm": {
+      "file": "中秋赏月吃月饼.webm",
+      "bytes": 1379432,
+      "sha256": "e9d094906fbbb08f9ce9f8a933e02632a65ef9088c5f615cc7f4aa212f51294c",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "堆雪人",
+    "file": "堆雪人.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43885,
+    "sha256": "3e2ff7dfddc7886546a3982726977b22080eb461412b2c5306f760fc2579832e",
+    "bytes": 691790,
+    "webm": {
+      "file": "堆雪人.webm",
+      "bytes": 1539719,
+      "sha256": "6fea4424dffa064f50f83f1cdadc8ce264832b9c1f0fcc6d98e25e487290bdf4",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "放烟花",
+    "file": "放烟花.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.44091,
+    "sha256": "13b19de30c02a1e899e59547a8f4e4ce38fa8ddd4b51ae6b4ac6d5cfcc2db3be",
+    "bytes": 617210,
+    "webm": {
+      "file": "放烟花.webm",
+      "bytes": 1791023,
+      "sha256": "da164e0993cc39d000d682c2cc4a1f46fe43c326b5a05ec372eb064a56eabae9",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "拆礼物",
+    "file": "拆礼物.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.44065,
+    "sha256": "bf92ffc17a8e46bff39fb00cb322eb8c1ee90e8a11fb3caf147b5a2039f76c76",
+    "bytes": 597447,
+    "webm": {
+      "file": "拆礼物.webm",
+      "bytes": 1460823,
+      "sha256": "9eb41114e295533614e1a391561edaf8c298c929795fa728f26a70889ac8896a",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃粽子",
+    "file": "吃粽子.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.4262,
+    "sha256": "d0c0d17048f1ad96ddf346c94095d97ff2db0186d5ae67ec70723df70f4c92c7",
+    "bytes": 544957,
+    "webm": {
+      "file": "吃粽子.webm",
+      "bytes": 1263714,
+      "sha256": "9591803d5de24a51218f111b178b262c6c6e8b100c9cd2338102977bb7b59b3f",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃汤圆",
+    "file": "吃汤圆.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43454,
+    "sha256": "331bec603aef4ba4a4aa89d483690464cbdab02d6ea65f76a095cb6d2085f7db",
+    "bytes": 578475,
+    "webm": {
+      "file": "吃汤圆.webm",
+      "bytes": 1303755,
+      "sha256": "dd16363c5ff7375609bcb44d7f39541c67f5913e473fd28f83e8c60ed2feb080",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃饺子",
+    "file": "吃饺子.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43033,
+    "sha256": "9da646735d0494f05dbabb7bdefcb2ba96af0f124591640e7d8495ae6eddfd46",
+    "bytes": 576260,
+    "webm": {
+      "file": "吃饺子.webm",
+      "bytes": 1304505,
+      "sha256": "7b4c4ac2310058d5f0523fbf8d8b2e8914ccd88fa4c1b47502971b7bc35a60bb",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃糖葫芦",
+    "file": "吃糖葫芦.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42824,
+    "sha256": "1bebca6e63a120a04efbbcbd725a991722af1608320257ed04dc632acd096c44",
+    "bytes": 541815,
+    "webm": {
+      "file": "吃糖葫芦.webm",
+      "bytes": 1339597,
+      "sha256": "9562f1bfa6f531dc5888cdb207dc4e3f11a6751c9ec3adb520067e2405e61a67",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃青团",
+    "file": "吃青团.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42688,
+    "sha256": "639ad9f18632e8511577c812a64e9aaf56221f09833eb7d1c06c19b5f089bcbd",
+    "bytes": 549042,
+    "webm": {
+      "file": "吃青团.webm",
+      "bytes": 1276345,
+      "sha256": "0f9fde48995c1f9aaa8624a5fda7a29bbddc0fd3877df7f0c130d2f77775d640",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃腊八粥",
+    "file": "吃腊八粥.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43183,
+    "sha256": "5cd06b72469c7ec96cc780060f14c6d869559b2009229eb4458bec8a88cb519b",
+    "bytes": 561961,
+    "webm": {
+      "file": "吃腊八粥.webm",
+      "bytes": 1276279,
+      "sha256": "d9a5079ae5e54d36a3f499e6e6122475a23583be3bcc21c337977a53e36cbe21",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃长寿面",
+    "file": "吃长寿面.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.43071,
+    "sha256": "50e5961890ce404adaa5032d904734e3936497651bea3b350c35b6678c6467ef",
+    "bytes": 586840,
+    "webm": {
+      "file": "吃长寿面.webm",
+      "bytes": 1364961,
+      "sha256": "2adb15b913c10a3aaba551b3416130685055a2d8accb475d464de9d221200fe6",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  },
+  {
+    "name": "吃年糕",
+    "file": "吃年糕.mp4",
+    "frames": 300,
+    "fps": 30,
+    "seconds": 10,
+    "width": 640,
+    "height": 360,
+    "safe_margin": "10%",
+    "first_last_mean_error": 0.42866,
+    "sha256": "3cb492c9864494717c0912e58450d7234807947d76f7d3d4be6ba36cd3781dfd",
+    "bytes": 592040,
+    "webm": {
+      "file": "吃年糕.webm",
+      "bytes": 1314368,
+      "sha256": "aab9591f9154d9e07cb86bd0598ff90496a322c33e9282b9573fd6f488235173",
+      "alpha_samples_checked": [
+        0,
+        149,
+        299
+      ],
+      "transparent_edge_tolerance": 4
+    }
+  }
+]

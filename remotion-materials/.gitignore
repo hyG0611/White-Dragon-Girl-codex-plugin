@@ -1,0 +1,9 @@
+node_modules/
+public/*
+!public/atlas-*.png
+!public/poses/
+out/
+out-chulong/
+dist/
+.cache/
+*.log
