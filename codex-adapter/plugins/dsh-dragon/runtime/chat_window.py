@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
 
 from chat_api import ChatRequest, completions_url
 from chat_memory import edit_memory, memory_context
+from chat_preferences import load_key, read_preferences, save_key, save_preferences
+from codex_chat import CodexChatRequest
 from pet_window import PetDialog, keep_in_front, warn
 from speech import ReplySpeech
 from voice_input import VoiceInput
@@ -65,15 +67,18 @@ class ChatWindow(PetDialog):
         self.resize(650, 540)
         self.history_path = history_path()
         self.sessions = load_sessions(self.history_path)
-        self.key = ''
+        self.preferences = read_preferences(self.settings)
+        self.key = load_key(self.preferences['protected_key'], self.endpoint)
         self.pending = None
         self.quick_pending = False
         self.image = None
         self.request = ChatRequest(self)
-        self.request.delta.connect(self.append)
-        self.request.completed.connect(self.complete)
-        self.request.failed.connect(self.fail)
-        self.request.cancelled.connect(lambda: self.fail('已停止回复。'))
+        self.codex_request = CodexChatRequest(self)
+        for request in (self.request, self.codex_request):
+            request.delta.connect(self.append)
+            request.completed.connect(self.complete)
+            request.failed.connect(self.fail)
+            request.cancelled.connect(lambda: self.fail('已停止回复。'))
         self.speech = ReplySpeech(self)
         self.speech.failed.connect(self.set_status)
 
@@ -141,26 +146,43 @@ class ChatWindow(PetDialog):
 
     @property
     def endpoint(self):
-        return self.settings.value('chat_endpoint', '')
+        return self.preferences['endpoint']
 
     @property
     def model(self):
-        return self.settings.value('chat_model', '')
+        return self.preferences['model']
+
+    @property
+    def backend(self):
+        return self.preferences['backend']
+
+    @property
+    def codex_model(self):
+        return self.preferences['codex_model']
 
     def configure(self):
         dialog = PetDialog(self)
         dialog.setWindowTitle('模型设置')
+        dialog.setMinimumWidth(460)
         form = QFormLayout(dialog)
+        source = QComboBox()
+        source.addItem('本机 Codex 账号', 'codex')
+        source.addItem('自定义 API', 'api')
+        source.setCurrentIndex(0 if self.backend == 'codex' else 1)
+        codex_model = QLineEdit(self.codex_model)
+        codex_model.setPlaceholderText('留空使用 Codex 默认模型')
         endpoint = QLineEdit(self.endpoint)
         endpoint.setPlaceholderText('https://api.example.com/v1')
         model = QLineEdit(self.model)
         key = QLineEdit(self.key)
         key.setEchoMode(QLineEdit.Password)
         endpoint.textEdited.connect(lambda _text: key.clear())
-        description = QLabel('填写支持 Chat Completions 的接口。API Key 仅保留在当前进程中，重启后需重新输入。')
+        description = QLabel()
         description.setTextFormat(Qt.PlainText)
         description.setWordWrap(True)
+        form.addRow('对话来源', source)
         form.addRow(description)
+        form.addRow('Codex 模型（可选）', codex_model)
         form.addRow('接口地址', endpoint)
         form.addRow('模型名称', model)
         form.addRow('API Key（可选）', key)
@@ -168,17 +190,41 @@ class ChatWindow(PetDialog):
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
         form.addRow(buttons)
+
+        def update_fields():
+            use_codex = source.currentData() == 'codex'
+            if use_codex:
+                description.setText('沿用本机已登录的 Codex 账号和额度，无需填写 API Key。')
+            elif self.preferences['protected_key'] and not self.key:
+                description.setText('保存的 API Key 无法解锁，请重新输入并保存。')
+            else:
+                description.setText('API Key 由 Windows 加密保存。清空后保存可移除密钥。')
+            form.setRowVisible(codex_model, use_codex)
+            for field in (endpoint, model, key):
+                form.setRowVisible(field, not use_codex)
+            dialog.adjustSize()
+
+        source.currentIndexChanged.connect(update_fields)
+        update_fields()
         while dialog.exec():
+            backend = source.currentData()
+            preferences = dict(self.preferences, backend=backend)
+            api_key = self.key
             try:
-                completions_url(endpoint.text())
-                if not model.text().strip():
-                    raise ValueError('请填写模型名称。')
-            except ValueError as error:
+                if backend == 'codex':
+                    preferences['codex_model'] = codex_model.text().strip()
+                else:
+                    address, name = endpoint.text().strip(), model.text().strip()
+                    completions_url(address)
+                    if not name:
+                        raise ValueError('请填写模型名称。')
+                    api_key = key.text().strip()
+                    preferences.update(endpoint=address, model=name, protected_key=save_key(api_key, address))
+                save_preferences(self.settings, preferences)
+            except (OSError, ValueError) as error:
                 warn(dialog, '模型设置', str(error))
                 continue
-            self.settings.setValue('chat_endpoint', endpoint.text().strip())
-            self.settings.setValue('chat_model', model.text().strip())
-            self.key = key.text().strip()
+            self.preferences, self.key = preferences, api_key
             return
 
     def set_status(self, text):
@@ -292,6 +338,7 @@ class ChatWindow(PetDialog):
             self.set_status('每条问题最多 4000 字。')
             return False
         question = question or '请说明截图中的内容。'
+        use_codex = self.backend == 'codex'
         messages = memory_context(self.settings)
         for turn in self.selected_history()[-6:]:
             messages.extend([{'role': 'user', 'content': turn['question'][:4000]},
@@ -301,7 +348,10 @@ class ChatWindow(PetDialog):
             if image is not None:
                 content = [{'type': 'text', 'text': question}, image_part(image)]
             messages.append({'role': 'user', 'content': content})
-            self.request.start(self.endpoint, self.model, self.key, messages)
+            if use_codex:
+                self.codex_request.start(self.codex_model, messages)
+            else:
+                self.request.start(self.endpoint, self.model, self.key, messages)
         except (RuntimeError, ValueError) as error:
             self.set_status(str(error))
             return False
@@ -309,7 +359,7 @@ class ChatWindow(PetDialog):
         self.pending = question
         self.quick_pending = quick
         self.set_busy(True)
-        self.set_status('正在等待模型回复…')
+        self.set_status('正在等待 Codex 回复…' if use_codex else '正在等待模型回复…')
         self.append(f'\n\n你：{question}\n桌宠：')
         return True
 
@@ -348,6 +398,7 @@ class ChatWindow(PetDialog):
 
     def stop(self):
         self.request.cancel()
+        self.codex_request.cancel()
         self.speech.stop()
 
     def done(self, result):

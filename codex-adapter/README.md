@@ -36,7 +36,9 @@ Windows 下可在右键菜单启用全局显隐快捷键，默认是 **Ctrl+Alt+
 
 ### 桌宠对话和识屏
 
-- **桌宠对话**可从右键或托盘打开。在「模型设置」填写 Chat Completions 兼容接口的基础地址或完整地址，再填模型名称和服务需要的 API Key。远程地址使用 HTTPS，本机模型可用回环 HTTP。API Key 只保留在当前进程，重启后需重新输入。回复支持流式显示和停止。对话文本保存在 Windows 的 `%LOCALAPPDATA%\DSHDragon\chat-history.json`，可在窗口中切换或删除。[Chat Completions 接口](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)
+- **本机 Codex 账号**使用当前在本机 Codex 中登录的 ChatGPT 账号和 Codex 额度，无需 API Key。悬停点「对话 → 完整对话 → 模型设置」，或从右键和托盘打开「桌宠对话」，将「对话来源」选为「本机 Codex 账号」并保存。Codex 模型留空时沿用本机默认模型。若提示找不到 Codex，重新运行安装脚本可更新程序路径。[Codex App Server](https://learn.chatgpt.com/docs/app-server)
+- **自定义 API**可填写 Chat Completions 兼容接口地址、模型名称和服务需要的 API Key。远程地址使用 HTTPS，本机模型可用回环 HTTP。主动识屏使用这里配置的视觉模型。[Chat Completions 接口](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)
+- **重启后保留**已保存的对话来源、Codex 模型、自定义 API 地址和模型。自定义 API Key 由当前 Windows 用户加密保存，并与接口地址绑定，可清空密钥后保存来移除。对话支持流式显示和停止。历史保存在 Windows 的 `%LOCALAPPDATA%\DSHDragon\chat-history.json`，可在窗口中切换或删除。Codex 登录由本机 Codex 客户端管理。[Windows 数据保护](https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata)
 - **快捷对话**可点悬停快捷栏的「对话」，也可按 **Ctrl+Alt+J** 或从右键、托盘打开。它使用当前模型和对话，按 Enter 发送文字，点回复气泡查看全文。右键「显示与播放」可更换或关闭全局快捷键。
 - 设置快捷键时，请按住 Ctrl、Alt、Shift 或 Win，再按一个字母或数字。输入框会显示完整组合键。格式不符或已被占用时，可在原窗口查看提示并重新录入。
 - **按住说话**位于快捷对话。窗口获得焦点时按住 **F9** 或按住说话按钮，等看到「正在录音」再讲话。也可以点「开始录音」，说完点「停止录音」。Windows 在本机识别并填入可编辑草稿，按 Enter 才发送文字。每段最多 30 秒，录音保留在内存，需要可用的默认麦克风和支持听写的 Windows 本地识别语言。[Windows 本地语音识别](https://learn.microsoft.com/en-us/dotnet/api/system.speech.recognition.speechrecognitionengine?view=netframework-4.8)

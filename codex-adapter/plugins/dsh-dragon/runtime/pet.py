@@ -23,6 +23,7 @@ from media import ClipPool
 from dialogs import TodoDialog, display_hotkey, edit_hotkey, edit_menu, edit_number, edit_settings
 from island import MediaDashboard
 from pet_window import edit_text, pick_files, warn
+from reactions import ACTIVITY_REACTIONS
 from reminders import can_snooze, check_reminder, snooze_reminder
 from role_dialog import import_role, local_roles
 from rolepacks import role_actions
@@ -106,6 +107,7 @@ class Pet(QWidget):
         if owner is None:
             QApplication.instance().aboutToQuit.connect(self.pool.close)
         self.clip_key = None
+        self.activity_clip = None
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setWindowTitle('DSH 白龙 · Codex 素材版' if owner is None else f'DSH 白龙 · 桌宠 {slot + 1}')
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -150,6 +152,7 @@ class Pet(QWidget):
         self.spin_timer.timeout.connect(self.spin_frame)
         self.message = ''
         self.message_opens_chat = False
+        self.activity_message = False
         self._bubble = None
         self.bubble_timer = QTimer(self)
         self.bubble_timer.setSingleShot(True)
@@ -263,6 +266,8 @@ class Pet(QWidget):
         self.pause_walk()
         self.glide.stop()
         self.resize_role(self.settings.value(f'role_size/{role}', 100, type=int))
+        if self.isVisible():
+            self.play_activity((self.owner or self).activity_state[0])
 
     def select_role(self, role):
         try:
@@ -349,6 +354,29 @@ class Pet(QWidget):
             self.pause_walk()
         self.update_frame_interval()
 
+    def play_reaction(self, animations):
+        if not self.isVisible() or self.offset is not None:
+            return False
+        for animation in animations:
+            if animation == self.current:
+                return False
+            if animation in self.actions:
+                try:
+                    self.play(animation)
+                except (RuntimeError, ValueError):
+                    continue
+                return True
+        return False
+
+    def play_activity(self, status):
+        if status == 'idle':
+            # Only interrupt the clip that the activity handler started.
+            if self.activity_clip is not None and self.activity_clip == self.clip_key:
+                self.play(self.idle)
+            self.activity_clip = None
+        elif self.play_reaction(ACTIVITY_REACTIONS[status]):
+            self.activity_clip = self.clip_key
+
     def update_frame_interval(self):
         self.timer.setInterval(8)
         if self.isVisible():
@@ -396,6 +424,8 @@ class Pet(QWidget):
             except RuntimeError as error:
                 self.say(str(error))
                 return
+        if self.current == self.idle:
+            self.play_activity((self.owner or self).activity_state[0])
         self.timer.start()
         if self.auto_enabled:
             self.auto.start()
@@ -403,6 +433,9 @@ class Pet(QWidget):
 
     def hideEvent(self, event):
         self.timer.stop()
+        if self.activity_clip is not None and self.activity_clip == self.clip_key:
+            self.current = self.idle
+            self.activity_clip = None
         self.release_clip()
         self.auto.stop()
         self.glide.stop()
@@ -919,10 +952,13 @@ class Pet(QWidget):
                 lines = self.settings.value('self_talk_lines', [], type=list)
                 self.say(random.choice(lines or ['休息一下吧。', '我在这里陪着你。', '今天也一起加油。']))
 
-    def say(self, message, duration=8000, open_chat=False):
+    def say(self, message, duration=8000, open_chat=False, *, animation=None):
+        if animation is not None:
+            self.play(animation)
         self.pause_walk()
         self.message = message[:100]
         self.message_opens_chat = open_chat
+        self.activity_message = False
         self._bubble = None
         self.bubble_timer.start(duration)
         self.update()
@@ -940,21 +976,22 @@ class Pet(QWidget):
         self.activity_state = state
         status, count = state
         changed = state != previous
+        if status != previous[0]:
+            for pet in (self, *self.children_pets.values()):
+                pet.play_activity(status)
+                pet.pause_walk()
         if status == 'idle':
-            if changed or event == 'idle':
-                self.play(self.idle)
+            if self.activity_message:
                 self.clear_message()
             return
-        if changed:
-            for pet in self.children_pets.values():
-                pet.pause_walk()
+        if self.message and not self.activity_message:
+            return
         if not changed and event != status:
             return
         messages = {'thinking': '正在思考', 'working': '正在处理任务', 'attention': '有事项需要确认'}
-        if status == 'working' and '写代码' in self.actions and self.current != '写代码':
-            self.play('写代码')
         message = messages[status] if count == 1 else f'{count} 个会话{messages[status]}'
         self.say(message)
+        self.activity_message = True
 
     def receive(self, socket):
         if not socket.canReadLine():
@@ -965,7 +1002,7 @@ class Pet(QWidget):
             if command == 'play':
                 self.play(data['animation'])
             elif command == 'say':
-                self.say(str(data.get('text', '')))
+                self.say(str(data.get('text', '')), animation=data.get('animation'))
             elif command == 'activity':
                 status = data.get('activity')
                 state = self.activity.update(status, data.get('session_id', ''), data.get('turn_id', ''))
@@ -989,6 +1026,7 @@ class Pet(QWidget):
     def clear_message(self):
         self.message = ''
         self.message_opens_chat = False
+        self.activity_message = False
         self._bubble = None
         self.update()
 

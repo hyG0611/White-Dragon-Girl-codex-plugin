@@ -11,6 +11,7 @@ from PySide6.QtCore import QObject, QProcess, QTimer
 from PySide6.QtWidgets import QApplication, QFileDialog
 from shiboken6 import isValid
 from pet_window import edit_text, pick_files
+from reactions import quota_reaction
 from weather import CityNotFound, current_weather
 
 try:
@@ -166,19 +167,21 @@ class DesktopWidgets(QObject):
         self.quota_poll.start()
 
         def worker():
+            animations = ()
             try:
                 windows = codex_quota.fetch(cancel=self.closed)
                 result = codex_quota.format_usage({
                     'windows': windows, 'checked_at': datetime.now().astimezone().isoformat()})
+                animations = quota_reaction(windows)
             except (OSError, RuntimeError, ValueError) as error:
                 result = str(error) if isinstance(error, RuntimeError) else '无法读取额度，请检查 Codex 安装与登录状态。'
-            self.quota_result.put(result)
+            self.quota_result.put((result, animations))
 
         threading.Thread(target=worker, daemon=True, name='DSH Codex quota').start()
 
     def accept_quota(self):
         try:
-            result = self.quota_result.get_nowait()
+            result, animations = self.quota_result.get_nowait()
         except queue.Empty:
             return
         self.quota_poll.stop()
@@ -186,6 +189,8 @@ class DesktopWidgets(QObject):
         self.quota_target = None
         if target is None or not isValid(target) or not target.isVisible():
             target = self.pet
+        if animations:
+            target.play_reaction(animations)
         target.notify('Codex 额度', result, duration=25_000)
 
     def request_weather(self):
