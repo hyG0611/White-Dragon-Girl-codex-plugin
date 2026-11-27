@@ -65,7 +65,7 @@ def load_sessions(path):
 
 
 class ChatWindow(PetDialog):
-    quick_finished = Signal(str, bool)
+    quick_finished = Signal(str, bool, bool)
 
     def __init__(self, pet):
         super().__init__(pet, Qt.Window)
@@ -390,11 +390,13 @@ class ChatWindow(PetDialog):
                 return
             self.tool_ticket = None
             quick = self.quick_pending
+            important = tool.kind in ('todo', 'quota')
             if animations:
                 self.pet.play_reaction(animations)
-            self.complete(text, local=True)
+            self.complete(text, local=True, important=important)
             if not quick:
-                self.pet.notify(TOOL_STATUS[tool.kind][0], text, duration=20_000, open_chat=True)
+                self.pet.notify(TOOL_STATUS[tool.kind][0], text, duration=20_000,
+                                open_chat=True, important=important)
 
         if tool.kind == 'weather':
             self.pet.widgets.request_weather(city='成都', callback=reply)
@@ -423,7 +425,7 @@ class ChatWindow(PetDialog):
         self.history.insertPlainText(text)
         self.history.ensureCursorVisible()
 
-    def complete(self, answer, *, local=False):
+    def complete(self, answer, *, local=False, important=False):
         history = self.selected_history()
         self.sessions[:] = [history] + [session for session in self.sessions if session is not history][:19]
         turn = {'question': self.pending, 'answer': answer}
@@ -441,7 +443,7 @@ class ChatWindow(PetDialog):
         self.set_busy(False)
         self.set_status('' if saved else '回复已收到，但本地历史写入失败。')
         if quick:
-            self.quick_finished.emit(answer, True)
+            self.quick_finished.emit(answer, True, important)
         if self.read_aloud.isChecked():
             self.speech.speak(answer)
 
@@ -452,7 +454,7 @@ class ChatWindow(PetDialog):
         self.set_busy(False)
         self.set_status(message)
         if quick:
-            self.quick_finished.emit(message, False)
+            self.quick_finished.emit(message, False, False)
 
     def stop(self):
         if self.tool_ticket is not None:
@@ -574,18 +576,19 @@ class QuickChat(PetDialog):
         elif self.chat.start_message(self.input.text(), quick=True):
             self.sent_text = self.input.text()
             self.hide()
-            self.pet.say(self.chat.status.text())
+            self.pet.say(self.chat.status.text(), transient=True)
         else:
             self.status.setText(self.chat.status.text())
 
-    def finish(self, text, success):
+    def finish(self, text, success, important=False):
         if success:
             if self.input.text() == self.sent_text:
                 self.input.clear()
-            summary = ' '.join(text.split())
-            if len(summary) > 76:
+            summary = text if important else ' '.join(text.split())
+            if not important and len(summary) > 76:
                 summary = summary[:76] + '…'
-            self.pet.notify('白龙对话', summary + '\n点气泡查看完整回复', 20000, open_chat=True)
+            self.pet.notify('白龙对话', summary + '\n点气泡查看完整回复', 20000,
+                            open_chat=True, important=important)
         else:
             self.pet.notify('白龙对话', text)
         self.sent_text = ''

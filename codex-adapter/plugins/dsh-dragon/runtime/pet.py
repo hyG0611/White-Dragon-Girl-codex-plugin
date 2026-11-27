@@ -1,4 +1,5 @@
 """Codex desktop adapter: local video playback, chroma removal and loopback IPC."""
+from collections import deque
 import json
 import ctypes
 from ctypes import wintypes
@@ -13,11 +14,11 @@ if sys.platform == 'win32':
 import cv2
 import numpy as np
 from PySide6.QtCore import QAbstractNativeEventFilter, QEasingCurve, QPoint, QPointF, QPropertyAnimation, Qt, QSettings, QTimer, Signal
-from PySide6.QtGui import QIcon, QKeySequence, QPainter, QPixmap, QTransform
+from PySide6.QtGui import QCursor, QIcon, QKeySequence, QPainter, QPixmap, QTransform
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QStyle, QSystemTrayIcon
 from activity import Activity
-from cloud_bubble import CloudBubble
+from cloud_bubble import BUBBLE_SIZE_RANGE, BubbleMessage, CloudBubble
 from hover_shortcuts import HoverShortcuts
 from media import ClipPool
 from dialogs import TodoDialog, display_hotkey, edit_hotkey, edit_menu, edit_number, edit_settings
@@ -120,6 +121,8 @@ class Pet(QWidget):
         self.interval = self.settings.value('interval', 45, type=int)
         self.opacity = min(100, max(20, self.settings.value('opacity', 100, type=int)))
         self.bubble_font = min(24, max(10, self.settings.value('bubble_font', 14, type=int)))
+        self.bubble_size = min(BUBBLE_SIZE_RANGE[1],
+                               max(BUBBLE_SIZE_RANGE[0], self.settings.value('bubble_size', 100, type=int)))
         area = QApplication.primaryScreen().availableGeometry()
         default = area.bottomRight() - QPoint(479, 319)
         position = self.settings.value('position', default, type=QPoint)
@@ -153,8 +156,14 @@ class Pet(QWidget):
         self.message = ''
         self.message_opens_chat = False
         self.activity_message = False
+        self.important_message = False
+        self.bubble_queue = deque()
+        self.deferred_bubble = None
+        self.bubble_hovered = False
+        self.bubble_remaining = None
         self._bubble = None
         self.bubble_timer = QTimer(self)
+        self.bubble_timer.setTimerType(Qt.PreciseTimer)
         self.bubble_timer.setSingleShot(True)
         self.bubble_timer.timeout.connect(self.clear_message)
         self.timer = QTimer(self)
@@ -316,9 +325,10 @@ class Pet(QWidget):
                 reminders.append(notification)
         if changed:
             self.save_todos()
-        if not reminders:
-            return
-        self.notify('白龙待办提醒', '\n'.join(reminders))
+        if reminders and not self.isVisible():
+            reminders = ['\n'.join(reminders)]
+        for reminder in reminders:
+            self.notify('白龙待办提醒', reminder, important=True)
 
     def snooze_latest(self):
         now = time()
@@ -330,21 +340,21 @@ class Pet(QWidget):
             if todo['last_fired'] == latest:
                 snooze_reminder(todo, now)
         self.save_todos()
-        self.notify('白龙待办提醒', '已设为 10 分钟后再提醒。')
+        self.notify('白龙待办提醒', '已设为 10 分钟后再提醒。', important=True)
 
     def add_snooze_action(self, menu):
         action = menu.addAction('刚到期的待办 · 10 分钟后再提醒', self.snooze_latest)
         action.setEnabled(any(can_snooze(todo, time()) for todo in self.todos))
         menu.aboutToShow.connect(lambda: action.setEnabled(any(can_snooze(todo, time()) for todo in self.todos)))
 
-    def notify(self, title, text, duration=8000, open_chat=False):
+    def notify(self, title, text, duration=8000, open_chat=False, *, important=False, transient=False):
         if self.isVisible():
-            self.say(text, duration, open_chat=open_chat)
+            self.say(text, duration, open_chat=open_chat, important=important, transient=transient)
         elif self.tray:
             self.tray.showMessage(title, text, msecs=duration)
         else:
             self.show()
-            self.say(text, duration, open_chat=open_chat)
+            self.say(text, duration, open_chat=open_chat, important=important, transient=transient)
 
     def play(self, name):
         if name not in self.actions:
@@ -434,8 +444,11 @@ class Pet(QWidget):
         if self.auto_enabled:
             self.auto.start()
         self.pause_walk()
+        self.refresh_bubble_hover()
 
     def hideEvent(self, event):
+        self.bubble_hovered = False
+        self.pause_bubble_timer()
         self.timer.stop()
         if self.activity_clip is not None and self.activity_clip == self.clip_key:
             self.current = self.idle
@@ -486,9 +499,38 @@ class Pet(QWidget):
         font = self.font()
         font.setFamilies(['YouYuan', *font.families()])
         font.setPixelSize(self.bubble_font)
-        if self._bubble is None or self._bubble.font != font:
-            self._bubble = CloudBubble(self.message, font)
+        if self._bubble is None or self._bubble.font != font or self._bubble.size != self.bubble_size:
+            self._bubble = CloudBubble(self.message, font, self.bubble_size)
         return self._bubble
+
+    def bubble_contains(self, position, *, include_tail=False):
+        if not self.message:
+            return False
+        point = QPointF(position.x() * 480 / self.width(), position.y() * 320 / self.height())
+        bubble = self.cloud_bubble()
+        return bubble.contains(point) if include_tail else bubble.body.contains(point)
+
+    def pause_bubble_timer(self):
+        if self.bubble_timer.isActive():
+            self.bubble_remaining = max(1, self.bubble_timer.remainingTime())
+            self.bubble_timer.stop()
+
+    def update_bubble_hover(self, position):
+        hovered = (position is not None and self.isVisible()
+                   and not self.windowFlags() & Qt.WindowTransparentForInput
+                   and self.bubble_contains(position, include_tail=True))
+        if hovered and not self.bubble_hovered:
+            self.hover_shortcuts.dismiss()
+        self.bubble_hovered = hovered
+        if hovered or not self.isVisible():
+            self.pause_bubble_timer()
+        elif self.bubble_remaining is not None:
+            duration, self.bubble_remaining = self.bubble_remaining, None
+            self.bubble_timer.start(duration)
+
+    def refresh_bubble_hover(self):
+        position = self.mapFromGlobal(QCursor.pos()) if self.underMouse() else None
+        self.update_bubble_hover(position)
 
     def sprite_transform(self):
         return (QTransform.fromScale(self.width() / 480, self.height() / 320)
@@ -509,12 +551,9 @@ class Pet(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            if self.message and self.message_opens_chat:
-                position = event.position()
-                hit = QPointF(position.x() * 480 / self.width(), position.y() * 320 / self.height())
-                if self.cloud_bubble().body.contains(hit):
-                    self.open_chat()
-                    return
+            if self.message_opens_chat and self.bubble_contains(event.position()):
+                self.open_chat()
+                return
             self.pause_walk()
             self.glide.stop()
             self.offset = event.globalPosition().toPoint() - self.pos()
@@ -524,6 +563,7 @@ class Pet(QWidget):
             self.drag_velocity = QPoint()
 
     def mouseMoveEvent(self, event):
+        self.update_bubble_hover(event.position() if self.offset is None else None)
         if self.offset is not None:
             can_drag = not self.locked or bool(event.modifiers() & Qt.ShiftModifier)
             if can_drag and (event.globalPosition().toPoint() - self.start_pos).manhattanLength() > 6:
@@ -542,6 +582,14 @@ class Pet(QWidget):
                 self.last_drag = (target, now)
                 self.edge_angle = 0
                 self.move(target)
+
+    def enterEvent(self, event):
+        self.update_bubble_hover(event.position())
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.update_bubble_hover(None)
+        super().leaveEvent(event)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton and self.offset is not None:
@@ -715,6 +763,7 @@ class Pet(QWidget):
         adjustments.addAction('不透明度', lambda: self.adjust('opacity', '不透明度（%）', 20, 100))
         adjustments.addAction('播放速率', lambda: self.adjust('speed', '播放速率（%）', 25, 300))
         adjustments.addAction('自动互动间隔', lambda: self.adjust('interval', '自动互动间隔（秒）', 5, 3600))
+        adjustments.addAction('气泡大小', lambda: self.adjust('bubble_size', '气泡大小（%）', *BUBBLE_SIZE_RANGE))
         adjustments.addAction('气泡字号', lambda: self.adjust('bubble_font', '气泡字号（像素）', 10, 24))
         adjustments.addAction('修改自言自语台词', self.edit_self_talk)
         if sys.platform == 'win32':
@@ -916,8 +965,10 @@ class Pet(QWidget):
         elif key == 'speed':
             self.speed = value
             self.play(self.current)
-        elif key == 'bubble_font':
-            self.bubble_font = value
+        elif key in ('bubble_size', 'bubble_font'):
+            setattr(self, key, value)
+            self.settings.sync()
+            self.refresh_bubble_hover()
             self.update()
         else:
             self.interval = value
@@ -956,15 +1007,33 @@ class Pet(QWidget):
                 lines = self.settings.value('self_talk_lines', [], type=list)
                 self.say(random.choice(lines or ['休息一下吧。', '我在这里陪着你。', '今天也一起加油。']))
 
-    def say(self, message, duration=8000, open_chat=False, *, animation=None):
+    def say(self, message, duration=8000, open_chat=False, *, animation=None,
+            important=False, activity=False, transient=False):
         if animation is not None:
             self.play(animation)
-        self.pause_walk()
-        self.message = message[:100]
-        self.message_opens_chat = open_chat
-        self.activity_message = False
+        notice = BubbleMessage(message[:240 if important else 100], duration, open_chat, important, activity)
+        if self.message and (self.important_message or self.bubble_hovered):
+            if important:
+                self.bubble_queue.append(notice)
+            elif not (activity or transient):
+                self.deferred_bubble = notice
+            return
+        if important and self.message_opens_chat:
+            remaining = self.bubble_remaining or max(1, self.bubble_timer.remainingTime())
+            self.deferred_bubble = BubbleMessage(self.message, remaining, open_chat=True)
+        self.display_bubble(notice)
+
+    def display_bubble(self, notice):
+        if notice.text:
+            self.pause_walk()
+        self.message = notice.text
+        self.message_opens_chat = notice.open_chat
+        self.activity_message = notice.activity
+        self.important_message = notice.important
+        self.bubble_timer.stop()
+        self.bubble_remaining = max(1, notice.duration) if notice.text else None
         self._bubble = None
-        self.bubble_timer.start(duration)
+        self.refresh_bubble_hover()
         self.update()
 
     def accept(self):
@@ -985,7 +1054,7 @@ class Pet(QWidget):
                 pet.play_activity(status)
                 pet.pause_walk()
         if status == 'idle':
-            if self.activity_message:
+            if self.activity_message and not self.bubble_hovered:
                 self.clear_message()
             return
         if self.message and not self.activity_message:
@@ -994,8 +1063,7 @@ class Pet(QWidget):
             return
         messages = {'thinking': '正在思考', 'working': '正在处理任务', 'attention': '有事项需要确认'}
         message = messages[status] if count == 1 else f'{count} 个会话{messages[status]}'
-        self.say(message)
-        self.activity_message = True
+        self.say(message, activity=True)
 
     def receive(self, socket):
         if not socket.canReadLine():
@@ -1028,11 +1096,11 @@ class Pet(QWidget):
         socket.disconnectFromServer()
 
     def clear_message(self):
-        self.message = ''
-        self.message_opens_chat = False
-        self.activity_message = False
-        self._bubble = None
-        self.update()
+        if self.bubble_queue:
+            self.display_bubble(self.bubble_queue.popleft())
+        else:
+            notice, self.deferred_bubble = self.deferred_bubble, None
+            self.display_bubble(notice or BubbleMessage(''))
 
 
 if __name__ == '__main__':

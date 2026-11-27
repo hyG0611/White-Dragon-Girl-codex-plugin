@@ -119,7 +119,8 @@ class HoverShortcuts(QWidget):
 
     def reveal(self):
         frame = self.pet.pixmap
-        if not self.available() or not self.pet.underMouse() or frame.isNull():
+        if (getattr(self.pet, 'bubble_hovered', False)
+                or not self.available() or not self.pet.underMouse() or frame.isNull()):
             return
         transform = self.pet.sprite_transform()
         transform.translate(-240, -135)

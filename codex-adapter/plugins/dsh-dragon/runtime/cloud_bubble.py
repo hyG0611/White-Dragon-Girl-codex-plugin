@@ -1,6 +1,20 @@
 """Draw the DSH pet's speech as a cloud in its 480 × 320 canvas."""
+from dataclasses import dataclass
+
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QLinearGradient, QPainterPath, QPen, QTextLayout, QTextOption
+from PySide6.QtGui import QColor, QLinearGradient, QPainterPath, QPen, QTextLayout, QTextOption, QTransform
+
+
+BUBBLE_SIZE_RANGE = (60, 150)
+
+
+@dataclass(frozen=True)
+class BubbleMessage:
+    text: str
+    duration: int = 0
+    open_chat: bool = False
+    important: bool = False
+    activity: bool = False
 
 
 def cloud_outline(width, bottom):
@@ -26,8 +40,13 @@ def cloud_outline(width, bottom):
 
 
 class CloudBubble:
-    def __init__(self, message, font):
+    def __init__(self, message, font, size=100):
         self.font = font
+        self.size = size
+        scale = size / 100
+        horizontal_padding = 60 * scale
+        line_width = min(352 * scale, 440 - horizontal_padding)
+        text_bottom = min(280, 319 - 40 * scale)
         # QTextLayout honors explicit line breaks and wraps long unbroken words.
         text = message.replace('\r\n', '\n').replace('\r', '\n').replace('\n', '\u2028')
         self.text = QTextLayout(text, font)
@@ -36,11 +55,11 @@ class CloudBubble:
         self.text.setTextOption(option)
         self.lines = []
         self.ellipsis = None
-        y, width = 26, 0
+        y, width = 26 * scale, 0
         self.text.beginLayout()
         while (line := self.text.createLine()).isValid():
-            line.setLineWidth(352)
-            if y + line.height() > 280:
+            line.setLineWidth(line_width)
+            if y + line.height() > text_bottom:
                 if self.lines:
                     last_line = self.lines.pop()
                     self.ellipsis = QRectF(208, last_line.y(), 64, last_line.height())
@@ -51,8 +70,16 @@ class CloudBubble:
             width = max(width, advance)
             y += line.height() + 1
         self.text.endLayout()
-        self.body = cloud_outline(max(148, width + 60), y + 8)
+        outline = cloud_outline(max(148 * scale, width + horizontal_padding), y / scale + 8)
+        self.body = QTransform.fromScale(1, scale).map(outline)
         self.edge = self.body.boundingRect()
+        bottom = self.edge.bottom()
+        self.tail = QPainterPath()
+        self.tail.addEllipse(QPointF(240 + 12 * scale, bottom + 8 * scale), 5 * scale, 4.5 * scale)
+        self.tail.addEllipse(QPointF(240, bottom + 17 * scale), 3 * scale, 2.7 * scale)
+
+    def contains(self, point):
+        return self.body.contains(point) or self.tail.contains(point)
 
     def draw(self, painter):
         painter.save()
@@ -64,10 +91,8 @@ class CloudBubble:
         painter.setPen(QPen(QColor('#b6a4d6'), 1.5))
         painter.setBrush(gradient)
         painter.drawPath(self.body)
-        bottom = self.edge.bottom()
         painter.setBrush(QColor('#f7f1ff'))
-        painter.drawEllipse(QPointF(252, bottom + 8), 5, 4.5)
-        painter.drawEllipse(QPointF(240, bottom + 17), 3, 2.7)
+        painter.drawPath(self.tail)
         painter.setPen(QColor('#352a4e'))
         for line in self.lines:
             line.draw(painter, QPointF(0, 0))

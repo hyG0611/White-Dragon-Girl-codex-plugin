@@ -168,12 +168,12 @@ class DesktopWidgets(QObject):
             if callback is not None:
                 callback(text, ())
             else:
-                target.notify('Codex 额度', text)
+                target.notify('Codex 额度', text, important=True)
             return
         self.quota_target = ref(target)
         self.quota_callback = callback
         if callback is None:
-            target.notify('Codex 额度', '正在查询 Codex 额度…')
+            target.notify('Codex 额度', '正在查询 Codex 额度…', transient=True)
         self.quota_poll.start()
 
         def worker():
@@ -205,14 +205,14 @@ class DesktopWidgets(QObject):
             target = self.pet
         if animations:
             target.play_reaction(animations)
-        target.notify('Codex 额度', result, duration=25_000)
+        target.notify('Codex 额度', result, duration=25_000, important=True)
 
     def request_weather(self, *, city=None, callback=None):
         if self.weather_poll.isActive():
             if callback is not None:
                 callback('正在查询天气，请稍后再试。')
             else:
-                self.pet.notify('白龙天气', '正在查询天气…')
+                self.pet.notify('白龙天气', '正在查询天气…', transient=True)
             return
         manual = city is None
         if manual:
@@ -226,7 +226,7 @@ class DesktopWidgets(QObject):
             self.settings.setValue('weather_city', city)
         self.weather_callback = callback
         if callback is None:
-            self.pet.notify('白龙天气', '正在查询天气…')
+            self.pet.notify('白龙天气', '正在查询天气…', transient=True)
         self.weather_poll.start()
 
         def worker():

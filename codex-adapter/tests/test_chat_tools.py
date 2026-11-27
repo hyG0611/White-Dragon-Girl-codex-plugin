@@ -59,11 +59,11 @@ class ChatToolTests(unittest.TestCase):
         usage = 'Codex 剩余额度\n5 小时：62.0%'
         quota = SimpleNamespace(fetch=lambda **_: [{'used_percent': 38}], format_usage=lambda _: usage)
         reply = []
-        self.chat.quick_finished.connect(lambda text, success: reply.append((text, success)))
+        self.chat.quick_finished.connect(lambda text, success, important: reply.append((text, success, important)))
         with patch.dict(sys.modules, {'codex_quota': quota}):
             self.assertTrue(self.chat.start_message('我还剩多少 Codex 额度？', quick=True), self.chat.status.text())
             self.wait_for_reply()
-        self.assertEqual(reply, [(usage, True)])
+        self.assertEqual(reply, [(usage, True, True)])
         self.assertEqual(self.chat.selected_history()[-1]['answer'], usage)
 
     def test_following_model_message_does_not_include_local_query_data(self):

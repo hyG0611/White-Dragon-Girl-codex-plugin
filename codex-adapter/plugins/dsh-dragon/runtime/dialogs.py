@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDateTimeEdit, QDialogButtonBox, QFormLayout, QHBoxLayout, QLineEdit,
     QListWidget, QListWidgetItem, QLabel, QPushButton, QSpinBox, QVBoxLayout, QWidget,
 )
+from cloud_bubble import BUBBLE_SIZE_RANGE
 from reminders import REPEAT_OPTIONS, can_snooze, next_repeat, parse_reminder, reminder_due, snooze_reminder
 from pet_window import PetDialog
 
@@ -283,6 +284,7 @@ def edit_settings(pet):
         ('opacity', '不透明度（%）', pet.opacity, 20, 100),
         ('speed', '播放速率（%）', pet.speed, 25, 300),
         ('interval', '自动互动间隔（秒）', pet.interval, 5, 3600),
+        ('bubble_size', '气泡大小（%）', pet.bubble_size, *BUBBLE_SIZE_RANGE),
         ('bubble_font', '气泡字号（像素）', pet.bubble_font, 10, 24),
     ):
         field = QSpinBox()
