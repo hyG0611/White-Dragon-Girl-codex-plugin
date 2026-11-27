@@ -1,6 +1,8 @@
 """Standalone model chat with local text history and optional screenshot input."""
 from base64 import b64encode
 from collections import Counter
+from copy import deepcopy
+from dataclasses import replace
 import json
 from pathlib import Path
 import sys
@@ -15,6 +17,7 @@ from PySide6.QtWidgets import (
 from chat_api import ChatRequest, completions_url
 from chat_memory import edit_memory, memory_context
 from chat_preferences import load_key, read_preferences, save_key, save_preferences
+from chat_summary import ChatSession, EDIT_LIMIT, RECENT_TURNS
 from chat_tools import chat_tool
 from codex_chat import CodexChatRequest
 from dialogs import prompt_reminder, reminder_summary
@@ -58,10 +61,9 @@ def load_sessions(path):
     sessions = []
     for history in saved[:20]:
         if isinstance(history, list):
-            turns = [turn for turn in history[-50:] if isinstance(turn, dict)
-                     and all(isinstance(turn.get(key), str) for key in ('question', 'answer'))]
-            if turns:
-                sessions.append(turns)
+            session = ChatSession.from_history(history)
+            if session.turns:
+                sessions.append(session)
     return sessions
 
 
@@ -137,6 +139,9 @@ class ChatWindow(PetDialog):
         layout.addWidget(self.status)
 
         controls = QHBoxLayout()
+        self.summary_button = QPushButton('对话小结')
+        self.summary_button.clicked.connect(self.edit_summary)
+        controls.addWidget(self.summary_button)
         self.read_aloud = QCheckBox('朗读回复')
         self.read_aloud.setChecked(self.settings.value('chat_read_aloud', False, type=bool))
         self.read_aloud.toggled.connect(self.set_read_aloud)
@@ -150,9 +155,13 @@ class ChatWindow(PetDialog):
         controls.addWidget(self.send_button)
         layout.addLayout(controls)
 
+        summaries_updated = [session.compact() for session in self.sessions]
+        summaries_saved = not any(summaries_updated) or self.save()
         self.selector.currentIndexChanged.connect(self.render_history)
         self.reload_sessions(0 if self.sessions else -1)
         self.set_busy(False)
+        if not summaries_saved:
+            self.set_status('已读取对话，暂时无法写入对话小结。')
 
     @property
     def endpoint(self):
@@ -251,25 +260,35 @@ class ChatWindow(PetDialog):
         self.selector.clear()
         self.selector.addItem('未保存的新对话', -1)
         for number, session in enumerate(self.sessions):
-            name = ' '.join(session[0]['question'].split())[:34]
+            name = ' '.join(session.turns[0]['question'].split())[:34]
             self.selector.addItem(name, number)
         self.selector.setCurrentIndex(index + 1)
         self.selector.blockSignals(False)
         self.render_history()
 
-    def selected_history(self):
+    def selected_session(self):
         index = self.selector.currentData()
-        return self.sessions[index] if isinstance(index, int) and index >= 0 else []
+        return self.sessions[index] if isinstance(index, int) and 0 <= index < len(self.sessions) else None
+
+    def selected_history(self):
+        session = self.selected_session()
+        return session.turns if session is not None else []
 
     def save(self):
-        payload = json.dumps(self.sessions, ensure_ascii=False).encode('utf-8')
         # Keep the active conversation and trim older conversations first.
+        sessions = self.sessions.copy()
+        payload = json.dumps([session.to_history() for session in sessions], ensure_ascii=False).encode('utf-8')
         while len(payload) >= HISTORY_LIMIT:
-            if len(self.sessions) > 1:
-                self.sessions.pop()
+            if len(sessions) > 1:
+                sessions.pop()
+            elif len(sessions[0].turns) > 1:
+                if sessions[0] is self.sessions[0]:
+                    sessions[0] = deepcopy(sessions[0])
+                session = sessions[0]
+                session.compact(keep=len(session.turns) - 1)
             else:
-                del self.sessions[0][0]
-            payload = json.dumps(self.sessions, ensure_ascii=False).encode('utf-8')
+                return False
+            payload = json.dumps([session.to_history() for session in sessions], ensure_ascii=False).encode('utf-8')
         try:
             self.history_path.parent.mkdir(parents=True, exist_ok=True)
         except OSError:
@@ -280,13 +299,63 @@ class ChatWindow(PetDialog):
         if file.write(payload) != len(payload):
             file.cancelWriting()
             return False
-        return file.commit()
+        if not file.commit():
+            return False
+        self.sessions[:] = sessions
+        return True
 
     def render_history(self):
         self.history.setPlainText('\n\n'.join(f'你：{turn["question"]}\n桌宠：{turn["answer"]}'
                                              for turn in self.selected_history()))
         self.history.moveCursor(QTextCursor.End)
         self.delete_button.setEnabled(bool(self.selected_history()) and self.pending is None)
+        self.summary_button.setEnabled(self.selected_session() is not None and self.pending is None)
+
+    def edit_summary(self):
+        session = self.selected_session()
+        if session is None or self.pending is not None:
+            return
+        dialog = PetDialog(self)
+        dialog.setWindowTitle('对话小结')
+        dialog.resize(520, 340)
+        layout = QVBoxLayout(dialog)
+        hint = QLabel('较早的内容会自动整理到这里。保存后，当前对话的后续消息会带上这份小结。')
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+        editor = QPlainTextEdit(session.summary_text())
+        editor.setAccessibleName('当前对话的小结')
+        editor.setPlaceholderText('例如：\n已定事项\n发布定在周一。\n\n待办\n准备发布说明。')
+        layout.addWidget(editor, 1)
+        status = QLabel()
+        status.setWordWrap(True)
+        layout.addWidget(status)
+        buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        buttons.button(QDialogButtonBox.Save).setText('保存')
+        buttons.button(QDialogButtonBox.Cancel).setText('取消')
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+
+        def confirm():
+            text = editor.toPlainText().strip()
+            if len(text) > EDIT_LIMIT:
+                status.setText(f'小结最多 {EDIT_LIMIT} 字，请缩短后保存。')
+                return
+            previous = self.sessions
+            updated = replace(session, edited=text, excerpts={})
+            self.sessions = [updated] + [item for item in previous if item is not session]
+            if self.save():
+                self.reload_sessions(0)
+                self.set_status('对话小结已保存。')
+                dialog.accept()
+            else:
+                self.sessions = previous
+                status.setText('无法写入对话小结，请检查本机历史文件的写入权限。')
+
+        buttons.accepted.connect(confirm)
+        try:
+            dialog.exec()
+        finally:
+            dialog.deleteLater()
 
     def new_session(self):
         self.clear_attachment()
@@ -332,6 +401,7 @@ class ChatWindow(PetDialog):
                        self.send_button, self.remove_attachment):
             widget.setEnabled(not busy)
         self.delete_button.setEnabled(not busy and bool(self.selected_history()))
+        self.summary_button.setEnabled(not busy and self.selected_session() is not None)
         self.cancel_button.setEnabled(busy or self.read_aloud.isChecked())
 
     def send(self):
@@ -356,7 +426,10 @@ class ChatWindow(PetDialog):
         question = question or '请说明截图中的内容。'
         use_codex = self.backend == 'codex'
         messages = memory_context(self.settings)
-        for turn in [item for item in self.selected_history() if not item.get('local')][-6:]:
+        session = self.selected_session()
+        if session is not None:
+            messages.extend(session.summary_context())
+        for turn in [item for item in self.selected_history() if not item.get('local')][-RECENT_TURNS:]:
             messages.extend([{'role': 'user', 'content': turn['question'][:4000]},
                              {'role': 'assistant', 'content': turn['answer'][:5000]}])
         try:
@@ -427,13 +500,15 @@ class ChatWindow(PetDialog):
         self.history.ensureCursorVisible()
 
     def complete(self, answer, *, local=False, important=False):
-        history = self.selected_history()
-        self.sessions[:] = [history] + [session for session in self.sessions if session is not history][:19]
+        if self.pending is None:
+            return
+        session = self.selected_session() or ChatSession()
+        self.sessions[:] = [session] + [item for item in self.sessions if item is not session][:19]
         turn = {'question': self.pending, 'answer': answer}
         if local:
             turn['local'] = True
-        history.append(turn)
-        del history[:-50]
+        session.turns.append(turn)
+        session.compact()
         saved = self.save()
         self.pending = None
         quick, self.quick_pending = self.quick_pending, False
