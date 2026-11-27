@@ -5,9 +5,11 @@ import json
 from pathlib import Path
 import queue
 import threading
+from weakref import ref
 
 from PySide6.QtCore import QObject, QProcess, QTimer
 from PySide6.QtWidgets import QApplication, QFileDialog
+from shiboken6 import isValid
 from pet_window import edit_text, pick_files
 from weather import CityNotFound, current_weather
 
@@ -56,6 +58,7 @@ class DesktopWidgets(QObject):
         self.settings = pet.settings
         self.closed = threading.Event()
         self.quota_result = queue.Queue()
+        self.quota_target = None
         self.quota_poll = QTimer(self)
         self.quota_poll.setInterval(100)
         self.quota_poll.timeout.connect(self.accept_quota)
@@ -149,15 +152,17 @@ class DesktopWidgets(QObject):
         if not started:
             self.pet.notify('快捷启动', f'启动失败：{path.name}')
 
-    def request_quota(self):
+    def request_quota(self, *, target=None):
         if self.quota_poll.isActive():
             return
+        target = target or self.pet
         try:
             import codex_quota
         except ImportError:
-            self.pet.notify('Codex 额度', '额度组件尚未安装，请运行插件安装脚本。')
+            target.notify('Codex 额度', '额度组件尚未安装，请运行插件安装脚本。')
             return
-        self.pet.notify('Codex 额度', '正在查询 Codex 额度…')
+        self.quota_target = ref(target)
+        target.notify('Codex 额度', '正在查询 Codex 额度…')
         self.quota_poll.start()
 
         def worker():
@@ -177,7 +182,11 @@ class DesktopWidgets(QObject):
         except queue.Empty:
             return
         self.quota_poll.stop()
-        self.pet.notify('Codex 额度', result, duration=25_000)
+        target = self.quota_target() if self.quota_target is not None else None
+        self.quota_target = None
+        if target is None or not isValid(target) or not target.isVisible():
+            target = self.pet
+        target.notify('Codex 额度', result, duration=25_000)
 
     def request_weather(self):
         if self.weather_poll.isActive():

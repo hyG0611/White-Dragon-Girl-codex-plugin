@@ -13,11 +13,12 @@ if sys.platform == 'win32':
 import cv2
 import numpy as np
 from PySide6.QtCore import QAbstractNativeEventFilter, QEasingCurve, QPoint, QPointF, QPropertyAnimation, Qt, QSettings, QTimer, Signal
-from PySide6.QtGui import QIcon, QKeySequence, QPainter, QPixmap
+from PySide6.QtGui import QIcon, QKeySequence, QPainter, QPixmap, QTransform
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QStyle, QSystemTrayIcon
 from activity import Activity
 from cloud_bubble import CloudBubble
+from hover_shortcuts import HoverShortcuts
 from media import ClipPool
 from dialogs import TodoDialog, display_hotkey, edit_hotkey, edit_menu, edit_number, edit_settings
 from island import MediaDashboard
@@ -156,6 +157,7 @@ class Pet(QWidget):
         self.timer = QTimer(self)
         self.timer.setTimerType(Qt.PreciseTimer)
         self.timer.timeout.connect(self.tick)
+        self.hover_shortcuts = HoverShortcuts(self)
         try:
             self.switch_role(self.role)
         except (ValueError, RuntimeError):
@@ -256,6 +258,7 @@ class Pet(QWidget):
             self.actions, self.idle = previous
             raise
         self.role = role
+        self.hover_shortcuts.dismiss()
         self.settings.setValue('role', role)
         self.pause_walk()
         self.glide.stop()
@@ -450,19 +453,21 @@ class Pet(QWidget):
             self._bubble = CloudBubble(self.message, font)
         return self._bubble
 
+    def sprite_transform(self):
+        return (QTransform.fromScale(self.width() / 480, self.height() / 320)
+                .translate(240, 185).rotate(self.angle or self.edge_angle).scale(self.facing, 1))
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
-        painter.scale(self.width() / 480, self.height() / 320)
         painter.save()
         painter.setOpacity(self.opacity / 100)
-        painter.translate(240, 185)
-        painter.rotate(self.angle or self.edge_angle)
-        painter.scale(self.facing, 1)
+        painter.setWorldTransform(self.sprite_transform(), True)
         painter.drawPixmap(-240, -135, 480, 270, self.pixmap)
         painter.restore()
         if self.message:
+            painter.scale(self.width() / 480, self.height() / 320)
             self.cloud_bubble().draw(painter)
 
     def mousePressEvent(self, event):
@@ -577,6 +582,7 @@ class Pet(QWidget):
         host = self.owner or self
         if (not self.walk_enabled or not self.isVisible() or self.locked or self.offset is not None
                 or self.cap is None or self.current != self.idle or self.message or self.underMouse()
+                or self.hover_shortcuts.isVisible()
                 or self.spin_timer.isActive() or self.glide.state() == QPropertyAnimation.Running
                 or self.walk_motion.state() == QPropertyAnimation.Running or host.activity_state[0] != 'idle'
                 or host.selecting_screenshot or QApplication.activePopupWidget() or QApplication.activeModalWidget()):
