@@ -1,5 +1,6 @@
 """Standalone model chat with local text history and optional screenshot input."""
 from base64 import b64encode
+from collections import Counter
 import json
 from pathlib import Path
 import sys
@@ -8,7 +9,7 @@ from PySide6.QtCore import QByteArray, QBuffer, QEvent, QIODevice, QSaveFile, QS
 from PySide6.QtGui import QPixmap, QTextCursor
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
-    QLineEdit, QMessageBox, QPlainTextEdit, QPushButton, QVBoxLayout,
+    QLineEdit, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton, QVBoxLayout,
 )
 
 from chat_api import ChatRequest, completions_url
@@ -19,7 +20,7 @@ from codex_chat import CodexChatRequest
 from dialogs import prompt_reminder, reminder_summary
 from pet_window import PetDialog, keep_in_front, warn
 from speech import ReplySpeech
-from voice_input import VoiceInput
+from voice_input import VoiceInput, input_devices
 
 
 def image_part(image):
@@ -477,7 +478,7 @@ class QuickChat(PetDialog):
         self.chat = chat
         self.sent_text = ''
         self.voice_mode = None
-        self.setWindowTitle('白龙快捷对话')
+        self.setWindowTitle(f'{self.pet.role} · 快捷对话')
         self.setMinimumWidth(380)
         layout = QVBoxLayout(self)
         row = QHBoxLayout()
@@ -506,6 +507,24 @@ class QuickChat(PetDialog):
         full.clicked.connect(self.open_full)
         row.addWidget(full)
         layout.addLayout(row)
+        if sys.platform == 'win32':
+            audio_row = QHBoxLayout()
+            audio_row.addWidget(QLabel('麦克风'))
+            self.microphone = QComboBox()
+            self.microphone.setAccessibleName('录音输入设备')
+            self.microphone.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+            self.microphone.setMinimumContentsLength(18)
+            self.microphone.currentIndexChanged.connect(self.save_microphone)
+            audio_row.addWidget(self.microphone, 1)
+            audio_row.addWidget(QLabel('输入音量'))
+            self.level = QProgressBar()
+            self.level.setAccessibleName('麦克风实时电平')
+            self.level.setFixedWidth(90)
+            self.level.setRange(0, 100)
+            self.level.setValue(0)
+            self.voice.level_changed.connect(self.level.setValue)
+            audio_row.addWidget(self.level)
+            layout.addLayout(audio_row)
         self.status = QLabel()
         self.status.setTextFormat(Qt.PlainText)
         self.status.setWordWrap(True)
@@ -518,21 +537,54 @@ class QuickChat(PetDialog):
 
     def eventFilter(self, watched, event):
         kind = event.type()
-        if kind in (QEvent.KeyPress, QEvent.KeyRelease) and event.key() == Qt.Key_F9:
+        if (kind in (QEvent.KeyPress, QEvent.KeyRelease) and event.key() == Qt.Key_F9
+                and (not event.modifiers() or (kind == QEvent.KeyRelease and self.voice_mode == 'keyboard'))):
             if not event.isAutoRepeat():
                 if kind == QEvent.KeyPress:
                     self.start_voice('keyboard')
                 else:
                     self.stop_voice('keyboard')
             return True
-        if watched is self and kind == QEvent.WindowDeactivate and self.voice.state in ('opening', 'recording'):
+        if (watched is self and kind == QEvent.WindowDeactivate and self.voice_mode != 'global'
+                and self.voice.state in ('opening', 'recording')):
             self.voice.cancel('快捷对话失去焦点，录音已取消。')
         return super().eventFilter(watched, event)
 
+    def refresh_microphones(self):
+        try:
+            devices = input_devices()
+        except OSError:
+            devices = []
+        if not devices:
+            self.status.setText('Windows 未列出录音设备，请检查麦克风连接和访问权限。')
+        chosen = self.pet.settings.value('voice_input_device', '')
+        names = Counter(device.name for device in devices)
+        previous = self.microphone.blockSignals(True)
+        self.microphone.clear()
+        self.microphone.addItem('系统默认', '')
+        for device in devices:
+            label = f'{device.name}（{device.index + 1}）' if names[device.name] > 1 else device.name
+            self.microphone.addItem(label, device.key)
+        index = self.microphone.findData(chosen)
+        if index < 0:
+            self.microphone.addItem('已选麦克风未连接', chosen)
+            index = self.microphone.count() - 1
+        self.microphone.setCurrentIndex(index)
+        self.microphone.blockSignals(previous)
+
+    def save_microphone(self, index):
+        if index >= 0:
+            self.pet.settings.setValue('voice_input_device', self.microphone.itemData(index))
+            self.pet.settings.sync()
+
     def start_voice(self, mode):
-        if not self.voice.busy:
-            self.voice_mode = mode
-            self.voice.press()
+        if sys.platform != 'win32' or self.voice.busy:
+            return False
+        self.voice_mode = mode
+        if self.voice.press(self.microphone.currentData() or ''):
+            return True
+        self.voice_mode = None
+        return False
 
     def stop_voice(self, mode):
         if self.voice_mode == mode:
@@ -550,14 +602,18 @@ class QuickChat(PetDialog):
         can_stop = self.voice_mode == 'click' and state in ('opening', 'recording')
         self.record_button.setText('停止录音' if can_stop else '开始录音')
         self.record_button.setEnabled(state == 'idle' or can_stop)
+        self.microphone.setEnabled(state == 'idle')
 
     def hideEvent(self, event):
         self.voice.cancel()
         super().hideEvent(event)
 
     def present(self):
+        self.setWindowTitle(f'{self.pet.role} · 快捷对话')
         if not self.voice.busy:
             self.status.setText('正在等待当前回复…' if self.chat.pending is not None else '')
+            if sys.platform == 'win32':
+                self.refresh_microphones()
         self.adjustSize()
         self.show()
         self.raise_()

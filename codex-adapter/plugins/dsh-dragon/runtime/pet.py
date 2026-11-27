@@ -32,27 +32,43 @@ from widgets import DesktopWidgets
 
 ROOT = Path(__file__).resolve().parents[1]
 SOCKET = 'dsh-dragon-codex-v1'
+VOICE_SEQUENCE = 'Ctrl+Alt+F9'
 
 
 class GlobalHotkey(QAbstractNativeEventFilter):
     """Register a single Windows hotkey independent of the pet window."""
-    def __init__(self, hotkey_id, sequence, callback):
+    modifiers = {'Ctrl': 2, 'Alt': 1, 'Shift': 4, 'Meta': 8}
+    modifier_keys = {2: (0x11,), 1: (0x12,), 4: (0x10,), 8: (0x5B, 0x5C)}
+
+    def __init__(self, hotkey_id, sequence, callback, on_release=None):
         super().__init__()
         self.hotkey_id = hotkey_id
         self.callback = callback
+        self.on_release = on_release
         self.registered = False
         self.user32 = ctypes.WinDLL('user32') if sys.platform == 'win32' else None
         self.sequence = sequence
+        self.release_timer = None
+        self.chord_keys = ()
+        if on_release is not None:
+            if self.user32 is not None:
+                self.user32.GetAsyncKeyState.argtypes = [ctypes.c_int]
+                self.user32.GetAsyncKeyState.restype = ctypes.c_short
+            self.release_timer = QTimer(interval=30)
+            self.release_timer.timeout.connect(self.check_release)
 
-    @staticmethod
-    def key_codes(sequence):
+    def key_codes(self, sequence):
         parts = sequence.split('+')
-        modifiers = {'Ctrl': 2, 'Alt': 1, 'Shift': 4, 'Meta': 8}
+        key = parts[-1]
+        function_key = self.on_release is not None and re.fullmatch(r'F(?:[1-9]|1[01])', key)
         if (len(parts) < 2 or len(set(parts[:-1])) != len(parts) - 1
-                or any(part not in modifiers for part in parts[:-1])
-                or not re.fullmatch('[A-Z0-9]', parts[-1])):
+                or any(part not in self.modifiers for part in parts[:-1])
+                or not (function_key or re.fullmatch('[A-Z0-9]', key))):
+            if self.on_release is not None:
+                raise ValueError('请选择带修饰键的字母、数字或 F1 至 F11。')
             raise ValueError('请选择带修饰键的单个字母或数字快捷键。')
-        return 0x4000 | sum(modifiers[part] for part in parts[:-1]), ord(parts[-1])
+        code = 0x70 + int(key[1:]) - 1 if function_key else ord(key)
+        return 0x4000 | sum(self.modifiers[part] for part in parts[:-1]), code
 
     def enable(self):
         if self.registered:
@@ -67,21 +83,47 @@ class GlobalHotkey(QAbstractNativeEventFilter):
         app.installNativeEventFilter(self)
         app.aboutToQuit.connect(self.disable)
         self.registered = True
+        if self.release_timer is not None:
+            self.chord_keys = ((key,), *(keys for mask, keys in self.modifier_keys.items() if modifiers & mask))
         return True
 
     def disable(self):
         if self.registered:
+            self.end_hold()
             self.user32.UnregisterHotKey(None, self.hotkey_id)
             app = QApplication.instance()
             app.removeNativeEventFilter(self)
             app.aboutToQuit.disconnect(self.disable)
             self.registered = False
 
+    def keys_pressed(self):
+        return all(any(self.user32.GetAsyncKeyState(key) & 0x8000 for key in alternatives)
+                   for alternatives in self.chord_keys)
+
+    def trigger(self):
+        if not self.registered:
+            return
+        if self.release_timer is None:
+            self.callback()
+        else:
+            self.end_hold()
+            if self.keys_pressed() and self.callback():
+                self.release_timer.start()
+
+    def check_release(self):
+        if not self.keys_pressed():
+            self.end_hold()
+
+    def end_hold(self):
+        if self.release_timer is not None and self.release_timer.isActive():
+            self.release_timer.stop()
+            self.on_release()
+
     def nativeEventFilter(self, event_type, message):
-        if event_type == b'windows_dispatcher_MSG':
+        if bytes(event_type) in (b'windows_dispatcher_MSG', b'windows_generic_MSG'):
             event = wintypes.MSG.from_address(int(message))
-            if event.message == 0x0312 and event.wParam == self.hotkey_id:
-                QTimer.singleShot(0, self.callback)
+            if self.registered and event.message == 0x0312 and event.wParam == self.hotkey_id:
+                QTimer.singleShot(0, self.trigger)
                 return True, 0
         return False, 0
 
@@ -207,10 +249,14 @@ class Pet(QWidget):
                                   lambda: self.setVisible(not self.isVisible()))
         self.chat_hotkey = GlobalHotkey(2, self.settings.value('quick_chat_sequence', 'Ctrl+Alt+J'),
                                        self.open_quick_chat)
+        self.voice_hotkey = GlobalHotkey(3, self.settings.value('voice_hotkey_sequence', VOICE_SEQUENCE),
+                                        self.start_global_voice, on_release=self.stop_global_voice)
         if self.settings.value('visibility_hotkey', False, type=bool):
             self.hotkey.enable()
         if self.settings.value('quick_chat_hotkey', True, type=bool):
             self.chat_hotkey.enable()
+        if self.settings.value('voice_hotkey_enabled', False, type=bool):
+            self.voice_hotkey.enable()
         self.create_tray()
         self.server = QLocalServer(self)
         self.server.newConnection.connect(self.accept)
@@ -775,6 +821,13 @@ class Pet(QWidget):
             quick_key.triggered.connect(lambda enabled: host.set_hotkey(host.chat_hotkey, 'quick_chat_hotkey', enabled))
             adjustments.addAction('设置快捷对话键…', lambda: QTimer.singleShot(0, lambda: host.configure_hotkey(
                 host.chat_hotkey, 'quick_chat_sequence', '设置快捷对话键')))
+            voice_key = adjustments.addAction(f'全局按住说话（{display_hotkey(host.voice_hotkey.sequence)}）')
+            voice_key.setCheckable(True)
+            voice_key.setChecked(host.voice_hotkey.registered)
+            voice_key.triggered.connect(lambda enabled: host.set_hotkey(
+                host.voice_hotkey, 'voice_hotkey_enabled', enabled))
+            adjustments.addAction('设置全局录音键…', lambda: QTimer.singleShot(0, lambda: host.configure_hotkey(
+                host.voice_hotkey, 'voice_hotkey_sequence', '设置全局录音键')))
             adjustments.addAction('选择点击音效…', self.choose_click_sound)
             if self.settings.value('click_wav', ''):
                 adjustments.addAction('恢复默认点击音效', lambda: self.settings.remove('click_wav'))
@@ -860,6 +913,15 @@ class Pet(QWidget):
         self.show()
         self.pause_walk()
         self.quick_chat.present()
+        return self.quick_chat
+
+    def start_global_voice(self):
+        quick = self.open_quick_chat()
+        return quick is not None and quick.start_voice('global')
+
+    def stop_global_voice(self):
+        if self.quick_chat is not None:
+            self.quick_chat.stop_voice('global')
 
     def queue_screenshot(self):
         if self.selecting_screenshot:
@@ -914,10 +976,11 @@ class Pet(QWidget):
         if not enabled:
             hotkey.disable()
         self.settings.setValue(key, enabled)
+        self.settings.sync()
 
     def configure_hotkey(self, hotkey, key, title):
         old = hotkey.sequence
-        registered = [item for item in (self.hotkey, self.chat_hotkey) if item.registered]
+        registered = [item for item in (self.hotkey, self.chat_hotkey, self.voice_hotkey) if item.registered]
         for item in registered:
             item.disable()
 
@@ -934,10 +997,11 @@ class Pet(QWidget):
                     hotkey.sequence = old
                     return f'{display_hotkey(sequence)} 可能已被其他应用占用，请换一个。'
                 self.settings.setValue(key, sequence)
+                self.settings.sync()
             return None
 
         try:
-            edit_hotkey(self, QKeySequence(old), title, apply)
+            edit_hotkey(self, QKeySequence(old), title, apply, allow_function_keys=hotkey is self.voice_hotkey)
         finally:
             for item in registered:
                 if not item.registered and not item.enable():

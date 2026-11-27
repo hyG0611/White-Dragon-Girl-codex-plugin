@@ -1,12 +1,17 @@
 """Capture a short Windows microphone clip and transcribe it locally."""
+from array import array
 from base64 import b64encode
+from collections import deque
 import ctypes as ct
+from dataclasses import dataclass
 from io import BytesIO
+from math import log10
 import os
 from pathlib import Path
 from queue import Empty, SimpleQueue
 import sys
 from threading import Event, Thread
+from time import monotonic
 import wave
 
 from PySide6.QtCore import QObject, QProcess, QTimer, Signal
@@ -15,6 +20,13 @@ from PySide6.QtCore import QObject, QProcess, QTimer, Signal
 RATE = 16_000
 MAX_SECONDS = 30
 PCM_WIDTH = 2
+CHUNK_BYTES = RATE * PCM_WIDTH * 40 // 1000
+MAX_BYTES = RATE * PCM_WIDTH * MAX_SECONDS
+WAVE_MAPPER = 0xFFFFFFFF
+WHDR_DONE = 1
+DRV_QUERYFUNCTIONINSTANCEID = 0x0811
+DRV_QUERYFUNCTIONINSTANCEIDSIZE = 0x0812
+
 TRANSCRIBE = r"""
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
@@ -62,48 +74,121 @@ class WaveHeader(ct.Structure):
                 ('next', ct.c_void_p), ('reserved', ct.c_size_t)]
 
 
+class WaveInCaps(ct.Structure):
+    _fields_ = [('manufacturer', ct.c_uint16), ('product', ct.c_uint16), ('version', ct.c_uint32),
+                ('name', ct.c_wchar * 32), ('formats', ct.c_uint32), ('channels', ct.c_uint16),
+                ('reserved', ct.c_uint16)]
+
+
+@dataclass(frozen=True)
+class InputDevice:
+    key: str
+    name: str
+    index: int
+
+
+def input_devices(audio=None):
+    if sys.platform != 'win32':
+        return []
+    audio = audio if audio is not None else ct.WinDLL('winmm')
+    audio.waveInGetDevCapsW.argtypes = [ct.c_size_t, ct.POINTER(WaveInCaps), ct.c_uint]
+    audio.waveInMessage.argtypes = [ct.c_void_p, ct.c_uint, ct.c_void_p, ct.c_size_t]
+    devices = []
+    for index in range(audio.waveInGetNumDevs()):
+        caps = WaveInCaps()
+        if audio.waveInGetDevCapsW(index, ct.byref(caps), ct.sizeof(caps)):
+            continue
+        size = ct.c_uint32()
+        # An endpoint path stays valid when Windows reorders its list of inputs.
+        key = f'legacy:{index}:{caps.name}'
+        if not audio.waveInMessage(index, DRV_QUERYFUNCTIONINSTANCEIDSIZE, ct.byref(size), 0) and size.value:
+            endpoint = ct.create_unicode_buffer(size.value // ct.sizeof(ct.c_wchar))
+            result = audio.waveInMessage(index, DRV_QUERYFUNCTIONINSTANCEID, endpoint, size.value)
+            if result == 0 and endpoint.value:
+                key = endpoint.value
+        devices.append(InputDevice(key, caps.name, index))
+    return devices
+
+
+def input_index(audio, key):
+    if not key:
+        return WAVE_MAPPER
+    for device in input_devices(audio):
+        if device.key == key:
+            return device.index
+    raise RuntimeError('已选麦克风未连接，请重新连接或改选输入设备。')
+
+
+def input_level(clip):
+    samples = array('h', clip)
+    peak = max(max(samples), -min(samples), 1)
+    decibels = 20 * log10(peak / 32_768)
+    return max(0, round(100 * (decibels + 55) / 55))
+
+
 class Microphone:
-    def __init__(self):
+    def __init__(self, device):
         self.audio = ct.WinDLL('winmm')
         self.audio.waveInOpen.argtypes = [ct.POINTER(ct.c_void_p), ct.c_uint, ct.POINTER(WaveFormat),
                                          ct.c_size_t, ct.c_size_t, ct.c_uint32]
         for name in ('waveInPrepareHeader', 'waveInAddBuffer', 'waveInUnprepareHeader'):
             getattr(self.audio, name).argtypes = [ct.c_void_p, ct.POINTER(WaveHeader), ct.c_uint]
-        for name in ('waveInStart', 'waveInStop', 'waveInReset', 'waveInClose'):
+        for name in ('waveInStart', 'waveInReset', 'waveInClose'):
             getattr(self.audio, name).argtypes = [ct.c_void_p]
+        self.device = device
         self.handle = ct.c_void_p()
-        self.buffer = ct.create_string_buffer(RATE * PCM_WIDTH * MAX_SECONDS)
-        self.header = WaveHeader(ct.addressof(self.buffer), len(self.buffer))
-        self.prepared = False
+        self.prepared = []
+        self.queued = deque()
 
     def prepare(self):
         fmt = WaveFormat(1, 1, RATE, RATE * PCM_WIDTH, PCM_WIDTH, PCM_WIDTH * 8, 0)
-        code = self.audio.waveInOpen(ct.byref(self.handle), 0xFFFFFFFF, ct.byref(fmt), 0, 0, 0)
+        index = input_index(self.audio, self.device)
+        code = self.audio.waveInOpen(ct.byref(self.handle), index, ct.byref(fmt), 0, 0, 0)
         if code:
-            raise RuntimeError(f'无法打开麦克风（Windows 错误 {code}）。请检查默认输入设备和麦克风访问权限。')
-        size = ct.sizeof(self.header)
-        if self.audio.waveInPrepareHeader(self.handle, ct.byref(self.header), size) == 0:
-            self.prepared = True
-            if self.audio.waveInAddBuffer(self.handle, ct.byref(self.header), size) == 0:
-                return
-        raise RuntimeError('无法准备录音，请检查麦克风是否被其他应用占用。')
+            raise RuntimeError(f'无法打开麦克风（Windows 错误 {code}）。请检查输入设备和麦克风访问权限。')
+        for _ in range(8):
+            buffer = ct.create_string_buffer(CHUNK_BYTES)
+            header = WaveHeader(ct.addressof(buffer), len(buffer))
+            if self.audio.waveInPrepareHeader(self.handle, ct.byref(header), ct.sizeof(header)):
+                raise RuntimeError('无法准备录音，请检查麦克风是否被其他应用占用。')
+            block = header, buffer
+            self.prepared.append(block)
+            self.enqueue(block)
+
+    def enqueue(self, block):
+        header, _ = block
+        header.recorded = 0
+        if self.audio.waveInAddBuffer(self.handle, ct.byref(header), ct.sizeof(header)):
+            raise RuntimeError('麦克风录音已中断，请检查输入设备后再试。')
+        self.queued.append(block)
 
     def start(self):
         code = self.audio.waveInStart(self.handle)
         if code:
             raise RuntimeError(f'无法开始录音（Windows 错误 {code}）。')
 
+    def read(self):
+        clip = bytearray()
+        for _ in range(len(self.queued)):
+            header, buffer = self.queued[0]
+            if not header.flags & WHDR_DONE:
+                break
+            clip.extend(buffer[:header.recorded])
+            self.enqueue(self.queued.popleft())
+        return clip
+
     def stop(self):
         if not self.handle:
             return b''
-        self.audio.waveInStop(self.handle)
-        recorded = self.header.recorded
         self.audio.waveInReset(self.handle)
-        if self.prepared:
-            self.audio.waveInUnprepareHeader(self.handle, ct.byref(self.header), ct.sizeof(self.header))
+        tail = b''.join(buffer[:header.recorded] for header, buffer in self.queued)
+        for header, _ in self.prepared:
+            self.audio.waveInUnprepareHeader(self.handle, ct.byref(header), ct.sizeof(header))
         self.audio.waveInClose(self.handle)
         self.handle = ct.c_void_p()
-        return self.buffer[:max(recorded, self.header.recorded)]
+        self.queued.clear()
+        self.prepared.clear()
+        return tail
 
 
 def wav_bytes(pcm):
@@ -115,29 +200,35 @@ def wav_bytes(pcm):
 
 
 class Capture:
-    def __init__(self):
+    def __init__(self, device):
+        self.device = device
         self.events = SimpleQueue()
         self.stop = Event()
         self.cancel_message = ''
         self.thread = Thread(target=self.record, name='DSH microphone', daemon=True)
 
     def record(self):
-        mic = None
+        clip = bytearray()
         try:
             if self.stop.is_set():
                 self.events.put(('finished', b''))
                 return
-            mic = Microphone()
-            mic.prepare()
-            if not self.stop.is_set():
-                mic.start()
-                self.events.put(('ready', None))
-                self.stop.wait(MAX_SECONDS)
-            clip = mic.stop()
-            self.events.put(('finished', b'' if self.cancel_message else clip))
+            mic = Microphone(self.device)
+            try:
+                mic.prepare()
+                if not self.stop.is_set():
+                    mic.start()
+                    deadline = monotonic() + MAX_SECONDS
+                    self.events.put(('ready', None))
+                    while monotonic() < deadline and len(clip) < MAX_BYTES and not self.stop.wait(0.02):
+                        chunk = mic.read()
+                        if chunk:
+                            clip.extend(chunk)
+                            self.events.put(('level', input_level(chunk)))
+            finally:
+                clip.extend(mic.stop())
+            self.events.put(('finished', b'' if self.cancel_message else clip[:MAX_BYTES]))
         except (OSError, RuntimeError) as error:
-            if mic is not None:
-                mic.stop()
             self.events.put(('error', str(error)))
 
 
@@ -145,6 +236,7 @@ class VoiceInput(QObject):
     status = Signal(str)
     recognized = Signal(str)
     state_changed = Signal(str)
+    level_changed = Signal(int)
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -171,13 +263,14 @@ class VoiceInput(QObject):
         self.state_changed.emit(state)
         self.status.emit(message)
 
-    def press(self):
+    def press(self, device=''):
         if self.busy or sys.platform != 'win32':
-            return
-        self.capture = Capture()
+            return False
+        self.capture = Capture(device)
         self.set_state('opening', '正在打开麦克风…')
         self.capture.thread.start()
         self.poll.start()
+        return True
 
     def release(self):
         if self.capture is None or self.capture.stop.is_set():
@@ -196,8 +289,13 @@ class VoiceInput(QObject):
                 if not capture.stop.is_set():
                     self.set_state('recording', '正在录音，请讲话。')
                 continue
+            if event == 'level':
+                if not capture.stop.is_set():
+                    self.level_changed.emit(value)
+                continue
             self.capture = None
             self.poll.stop()
+            self.level_changed.emit(0)
             if capture.cancel_message:
                 self.set_state('idle', capture.cancel_message)
             elif event == 'error':
@@ -235,7 +333,7 @@ class VoiceInput(QObject):
         elif code == 3:
             message = 'Windows 未安装本地语音识别语言，请在系统语言设置中安装。'
         elif code == 4:
-            message = '没有听清。请确认 Windows 的默认输入设备能收到声音，再说一次。'
+            message = '没有听清。请看录音时的音量有没有变化，再说一次。'
         elif code == 5:
             message = '本地语音识别超时，请再试一次。'
         else:

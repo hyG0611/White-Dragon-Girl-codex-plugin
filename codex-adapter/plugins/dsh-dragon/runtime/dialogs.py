@@ -50,8 +50,9 @@ class HotkeyEdit(QLineEdit):
                  ('Shift', Qt.ShiftModifier), ('Meta', Qt.MetaModifier))
     modifier_keys = (Qt.Key_Control, Qt.Key_Alt, Qt.Key_Shift, Qt.Key_Meta, Qt.Key_AltGr)
 
-    def __init__(self, sequence):
+    def __init__(self, sequence, allow_function_keys=False):
         super().__init__(display_hotkey(sequence))
+        self.allow_function_keys = allow_function_keys
         self.setReadOnly(True)
         self.setAccessibleName('快捷键组合')
 
@@ -72,8 +73,13 @@ class HotkeyEdit(QLineEdit):
             super().keyPressEvent(event)
             return
         parts = [name for name, flag in self.modifiers if event.modifiers() & flag]
-        if parts and (Qt.Key_A <= key <= Qt.Key_Z or Qt.Key_0 <= key <= Qt.Key_9):
-            sequence = '+'.join([*parts, chr(key)])
+        key_name = ''
+        if Qt.Key_A <= key <= Qt.Key_Z or Qt.Key_0 <= key <= Qt.Key_9:
+            key_name = chr(key)
+        elif self.allow_function_keys and Qt.Key_F1 <= key <= Qt.Key_F11:
+            key_name = f'F{key - Qt.Key_F1 + 1}'
+        if parts and key_name:
+            sequence = '+'.join([*parts, key_name])
             self.setText(display_hotkey(sequence))
             self.recorded.emit(sequence)
         else:
@@ -81,13 +87,14 @@ class HotkeyEdit(QLineEdit):
         event.accept()
 
 
-def edit_hotkey(parent, sequence, title='设置全局显隐快捷键', apply=None):
+def edit_hotkey(parent, sequence, title='设置全局显隐快捷键', apply=None, *, allow_function_keys=False):
     dialog = PetDialog(parent)
     dialog.setWindowTitle(title)
     layout = QVBoxLayout(dialog)
-    layout.addWidget(drag_label('请按住 Ctrl、Alt、Shift 或 Win，再按一个字母或数字。'))
+    allowed = '字母、数字或 F1 至 F11' if allow_function_keys else '字母或数字'
+    layout.addWidget(drag_label(f'请按住 Ctrl、Alt、Shift 或 Win，再按一个{allowed}。'))
     chosen = sequence.toString(QKeySequence.PortableText)
-    edit = HotkeyEdit(chosen)
+    edit = HotkeyEdit(chosen, allow_function_keys)
     layout.addWidget(edit)
     status = QLabel()
     status.setTextFormat(Qt.PlainText)
@@ -107,7 +114,7 @@ def edit_hotkey(parent, sequence, title='设置全局显隐快捷键', apply=Non
         save.setEnabled(True)
 
     def invalid():
-        status.setText('请同时按住修饰键和一个字母或数字。')
+        status.setText(f'请同时按住修饰键和一个{allowed}。')
         save.setEnabled(False)
 
     def confirm():

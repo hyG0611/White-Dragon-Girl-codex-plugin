@@ -52,3 +52,18 @@ class SettingsDialogTests(unittest.TestCase):
         QTest.keyClick(editor, Qt.Key_K, Qt.ControlModifier | Qt.AltModifier)
         self.assertEqual(editor.text(), 'Ctrl+Alt+K')
         self.assertEqual(recorded, ['Ctrl+Alt+K'])
+
+    def test_recording_hotkey_displays_function_key_in_the_saved_chord(self):
+        editor = HotkeyEdit('Ctrl+Alt+F9', allow_function_keys=True)
+        recorded = []
+        invalid = []
+        editor.recorded.connect(recorded.append)
+        editor.invalid.connect(lambda: invalid.append(True))
+
+        QTest.keyClick(editor, Qt.Key_F12, Qt.ControlModifier | Qt.AltModifier)
+        self.assertEqual(editor.text(), 'Ctrl+Alt+F9')
+        self.assertEqual(invalid, [True])
+
+        QTest.keyClick(editor, Qt.Key_F8, Qt.ControlModifier | Qt.ShiftModifier)
+        self.assertEqual(editor.text(), 'Ctrl+Shift+F8')
+        self.assertEqual(recorded, ['Ctrl+Shift+F8'])
