@@ -60,6 +60,7 @@ class DesktopWidgets(QObject):
         self.closed = threading.Event()
         self.quota_result = queue.Queue()
         self.quota_target = None
+        self.quota_callback = None
         self.quota_poll = QTimer(self)
         self.quota_poll.setInterval(100)
         self.quota_poll.timeout.connect(self.accept_quota)
@@ -67,6 +68,7 @@ class DesktopWidgets(QObject):
         self.calendar_timer.timeout.connect(self.check_calendar)
         self.calendar_timer.start(15_000)
         self.weather_result = queue.Queue()
+        self.weather_callback = None
         self.weather_poll = QTimer(self)
         self.weather_poll.setInterval(100)
         self.weather_poll.timeout.connect(self.accept_weather)
@@ -153,17 +155,25 @@ class DesktopWidgets(QObject):
         if not started:
             self.pet.notify('快捷启动', f'启动失败：{path.name}')
 
-    def request_quota(self, *, target=None):
+    def request_quota(self, *, target=None, callback=None):
         if self.quota_poll.isActive():
+            if callback is not None:
+                callback('正在查询 Codex 额度，请稍后再试。', ())
             return
         target = target or self.pet
         try:
             import codex_quota
         except ImportError:
-            target.notify('Codex 额度', '额度组件尚未安装，请运行插件安装脚本。')
+            text = '额度组件尚未安装，请运行插件安装脚本。'
+            if callback is not None:
+                callback(text, ())
+            else:
+                target.notify('Codex 额度', text)
             return
         self.quota_target = ref(target)
-        target.notify('Codex 额度', '正在查询 Codex 额度…')
+        self.quota_callback = callback
+        if callback is None:
+            target.notify('Codex 额度', '正在查询 Codex 额度…')
         self.quota_poll.start()
 
         def worker():
@@ -187,22 +197,36 @@ class DesktopWidgets(QObject):
         self.quota_poll.stop()
         target = self.quota_target() if self.quota_target is not None else None
         self.quota_target = None
+        callback, self.quota_callback = self.quota_callback, None
+        if callback is not None:
+            callback(result, animations)
+            return
         if target is None or not isValid(target) or not target.isVisible():
             target = self.pet
         if animations:
             target.play_reaction(animations)
         target.notify('Codex 额度', result, duration=25_000)
 
-    def request_weather(self):
+    def request_weather(self, *, city=None, callback=None):
         if self.weather_poll.isActive():
-            self.pet.notify('白龙天气', '正在查询天气…')
+            if callback is not None:
+                callback('正在查询天气，请稍后再试。')
+            else:
+                self.pet.notify('白龙天气', '正在查询天气…')
             return
-        city = edit_text(self.pet, '查看天气', '输入城市名称', self.settings.value('weather_city', '成都'))
+        manual = city is None
+        if manual:
+            city = edit_text(self.pet, '查看天气', '输入城市名称', self.settings.value('weather_city', '成都'))
         city = (city or '').strip()[:80]
         if not city:
+            if callback is not None:
+                callback('请填写要查询的城市。')
             return
-        self.settings.setValue('weather_city', city)
-        self.pet.notify('白龙天气', '正在查询天气…')
+        if manual:
+            self.settings.setValue('weather_city', city)
+        self.weather_callback = callback
+        if callback is None:
+            self.pet.notify('白龙天气', '正在查询天气…')
         self.weather_poll.start()
 
         def worker():
@@ -224,4 +248,8 @@ class DesktopWidgets(QObject):
         except queue.Empty:
             return
         self.weather_poll.stop()
-        self.pet.notify('白龙天气', result, duration=15_000)
+        callback, self.weather_callback = self.weather_callback, None
+        if callback is not None:
+            callback(result)
+        else:
+            self.pet.notify('白龙天气', result, duration=15_000)

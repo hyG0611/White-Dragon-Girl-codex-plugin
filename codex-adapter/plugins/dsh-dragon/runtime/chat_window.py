@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import sys
 
-from PySide6.QtCore import QByteArray, QBuffer, QEvent, QIODevice, QSaveFile, QStandardPaths, Qt, Signal
+from PySide6.QtCore import QByteArray, QBuffer, QEvent, QIODevice, QSaveFile, QStandardPaths, QTimer, Qt, Signal
 from PySide6.QtGui import QPixmap, QTextCursor
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
@@ -14,7 +14,9 @@ from PySide6.QtWidgets import (
 from chat_api import ChatRequest, completions_url
 from chat_memory import edit_memory, memory_context
 from chat_preferences import load_key, read_preferences, save_key, save_preferences
+from chat_tools import chat_tool
 from codex_chat import CodexChatRequest
+from dialogs import prompt_reminder, reminder_summary
 from pet_window import PetDialog, keep_in_front, warn
 from speech import ReplySpeech
 from voice_input import VoiceInput
@@ -32,6 +34,11 @@ def image_part(image):
 
 
 HISTORY_LIMIT = 4 * 1024 * 1024
+TOOL_STATUS = {
+    'weather': ('成都天气', '正在查询成都天气…'),
+    'quota': ('Codex 额度', '正在查询 Codex 额度…'),
+    'todo': ('待办提醒', '请确认待办提醒…'),
+}
 
 
 def history_path():
@@ -62,6 +69,7 @@ class ChatWindow(PetDialog):
 
     def __init__(self, pet):
         super().__init__(pet, Qt.Window)
+        self.pet = pet
         self.settings = pet.settings
         self.setWindowTitle('桌宠对话')
         self.resize(650, 540)
@@ -71,6 +79,7 @@ class ChatWindow(PetDialog):
         self.key = load_key(self.preferences['protected_key'], self.endpoint)
         self.pending = None
         self.quick_pending = False
+        self.tool_ticket = None
         self.image = None
         self.request = ChatRequest(self)
         self.codex_request = CodexChatRequest(self)
@@ -337,10 +346,16 @@ class ChatWindow(PetDialog):
         if len(question) > 4000:
             self.set_status('每条问题最多 4000 字。')
             return False
+        tool = chat_tool(question) if image is None else None
+        if tool is not None:
+            ticket = self.tool_ticket = object()
+            self.begin_reply(question, quick, TOOL_STATUS[tool.kind][1])
+            QTimer.singleShot(0, self, lambda: self.run_tool(ticket, tool))
+            return True
         question = question or '请说明截图中的内容。'
         use_codex = self.backend == 'codex'
         messages = memory_context(self.settings)
-        for turn in self.selected_history()[-6:]:
+        for turn in [item for item in self.selected_history() if not item.get('local')][-6:]:
             messages.extend([{'role': 'user', 'content': turn['question'][:4000]},
                              {'role': 'assistant', 'content': turn['answer'][:5000]}])
         try:
@@ -355,23 +370,66 @@ class ChatWindow(PetDialog):
         except (RuntimeError, ValueError) as error:
             self.set_status(str(error))
             return False
+        self.begin_reply(question, quick, '正在等待 Codex 回复…' if use_codex else '正在等待模型回复…')
+        return True
+
+    def begin_reply(self, question, quick, status):
         self.speech.stop()
         self.pending = question
         self.quick_pending = quick
         self.set_busy(True)
-        self.set_status('正在等待 Codex 回复…' if use_codex else '正在等待模型回复…')
+        self.set_status(status)
         self.append(f'\n\n你：{question}\n桌宠：')
-        return True
+
+    def run_tool(self, ticket, tool):
+        if self.tool_ticket is not ticket:
+            return
+
+        def reply(text, animations=()):
+            if self.tool_ticket is not ticket:
+                return
+            self.tool_ticket = None
+            quick = self.quick_pending
+            if animations:
+                self.pet.play_reaction(animations)
+            self.complete(text, local=True)
+            if not quick:
+                self.pet.notify(TOOL_STATUS[tool.kind][0], text, duration=20_000, open_chat=True)
+
+        if tool.kind == 'weather':
+            self.pet.widgets.request_weather(city='成都', callback=reply)
+        elif tool.kind == 'quota':
+            self.pet.widgets.request_quota(callback=reply)
+        else:
+            if len(tool.sentence) > 150:
+                reply('请缩短待办指令。提醒事项最多 100 个字。')
+                return
+            todo = prompt_reminder(self if self.isVisible() else self.pet, tool.sentence, tool.repeat)
+            if self.tool_ticket is not ticket:
+                return
+            if todo is None:
+                reply('已取消添加待办。')
+                return
+            self.pet.todos.append(todo)
+            if not self.pet.save_todos():
+                self.pet.todos.pop()
+                self.pet.save_todos()
+                reply('待办保存失败，请检查本机设置的写入权限后再试。')
+                return
+            reply('已添加待办。\n' + reminder_summary(todo))
 
     def append(self, text):
         self.history.moveCursor(QTextCursor.End)
         self.history.insertPlainText(text)
         self.history.ensureCursorVisible()
 
-    def complete(self, answer):
+    def complete(self, answer, *, local=False):
         history = self.selected_history()
         self.sessions[:] = [history] + [session for session in self.sessions if session is not history][:19]
-        history.append({'question': self.pending, 'answer': answer})
+        turn = {'question': self.pending, 'answer': answer}
+        if local:
+            turn['local'] = True
+        history.append(turn)
         del history[:-50]
         saved = self.save()
         self.pending = None
@@ -397,6 +455,9 @@ class ChatWindow(PetDialog):
             self.quick_finished.emit(message, False)
 
     def stop(self):
+        if self.tool_ticket is not None:
+            self.tool_ticket = None
+            self.fail('已停止。')
         self.request.cancel()
         self.codex_request.cancel()
         self.speech.stop()
@@ -513,7 +574,7 @@ class QuickChat(PetDialog):
         elif self.chat.start_message(self.input.text(), quick=True):
             self.sent_text = self.input.text()
             self.hide()
-            self.pet.say('正在等待模型回复…')
+            self.pet.say(self.chat.status.text())
         else:
             self.status.setText(self.chat.status.text())
 

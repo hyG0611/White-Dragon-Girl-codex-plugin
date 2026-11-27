@@ -72,10 +72,32 @@ def snooze_reminder(todo, now):
 
 
 CLOCK = re.compile(
-    r'(?P<day>今天|明天|后天|今晚|明晚)?\s*'
+    r'(?P<day>今天|明天|后天|今晚|明晚|(?:周|星期)[1-6日天])?\s*'
     r'(?P<period>凌晨|早上|上午|中午|下午|晚上)?\s*'
     r'(?P<hour>[0-9]{1,2})(?::(?P<minute>[0-9]{2})|点(?:(?P<half>半)|(?P<mins>[0-9]{1,2})分?)?)'
 )
+RELATIVE = re.compile(r'([0-9]{1,6}|半)\s*(分钟|小时)后')
+HAN_NUMBER = re.compile(r'[零〇一二两三四五六七八九十]+')
+HAN_DIGITS = str.maketrans('零〇一二两三四五六七八九', '001223456789')
+
+
+def normalize_reminder_time(value):
+    def decimal(match):
+        digits = match[0].translate(HAN_DIGITS)
+        if '十' not in digits:
+            return digits
+        tens, _, ones = digits.partition('十')
+        if len(tens) <= 1 and len(ones) <= 1 and '十' not in ones:
+            return str(int(tens or '1') * 10 + int(ones or '0'))
+        return match[0]
+
+    return HAN_NUMBER.sub(decimal, unicodedata.normalize('NFKC', value.strip()))
+
+
+def looks_like_reminder(sentence):
+    when, separator, _ = sentence.partition('提醒我')
+    when = normalize_reminder_time(when)
+    return bool(separator and (CLOCK.fullmatch(when) or RELATIVE.fullmatch(when)))
 
 
 def parse_reminder(sentence, now=None):
@@ -86,8 +108,8 @@ def parse_reminder(sentence, now=None):
     when, text = match[1], match[2].strip()
     if len(text) > 100:
         raise ValueError('提醒事项最多 100 个字。')
-    when = unicodedata.normalize('NFKC', when.strip())
-    relative = re.fullmatch(r'([0-9]{1,6}|半)\s*(分钟|小时)后', when)
+    when = normalize_reminder_time(when)
+    relative = RELATIVE.fullmatch(when)
     if relative:
         amount, unit = relative.groups()
         if (amount, unit) == ('半', '小时'):
@@ -120,12 +142,20 @@ def parse_reminder(sentence, now=None):
             start, end = ranges[period]
             if not start <= hour < end:
                 raise ValueError('时段和小时不一致，请改用 24 小时制。')
+        weekday = None
+        if day and day.startswith(('周', '星期')):
+            weekday = 6 if day[-1] in '日天' else int(day[-1]) - 1
         days = {'明天': 1, '明晚': 1, '后天': 2}.get(day, 0)
+        if weekday is not None:
+            days = (weekday - now.weekday()) % 7
         wall = now.replace(hour=hour, minute=minute, second=0, microsecond=0) + timedelta(days=days)
         if wall <= now:
-            if day:
+            if weekday is not None:
+                wall += timedelta(days=7)
+            elif day:
                 raise ValueError('这个时间已经过了，请换一个未来的时间。')
-            wall += timedelta(days=1)
+            else:
+                wall += timedelta(days=1)
         due = int(wall.timestamp())
         if datetime.fromtimestamp(due, now.tzinfo).replace(tzinfo=None) != wall.replace(tzinfo=None):
             raise ValueError('这个本地时间不存在，请换一个时间。')

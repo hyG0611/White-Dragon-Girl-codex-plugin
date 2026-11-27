@@ -298,7 +298,11 @@ class Pet(QWidget):
 
     def save_todos(self):
         self.settings.setValue('todos', json.dumps(self.todos, ensure_ascii=False))
+        self.settings.sync()
+        if self.settings.status() != QSettings.NoError:
+            return False
         self.todos_changed.emit()
+        return True
 
     def check_todos(self):
         now = time()

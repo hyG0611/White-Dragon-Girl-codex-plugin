@@ -40,6 +40,7 @@ Windows 下可在右键菜单启用全局显隐快捷键，默认是 **Ctrl+Alt+
 - **自定义 API**可填写 Chat Completions 兼容接口地址、模型名称和服务需要的 API Key。远程地址使用 HTTPS，本机模型可用回环 HTTP。主动识屏使用这里配置的视觉模型。[Chat Completions 接口](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)
 - **重启后保留**已保存的对话来源、Codex 模型、自定义 API 地址和模型。自定义 API Key 由当前 Windows 用户加密保存，并与接口地址绑定，可清空密钥后保存来移除。对话支持流式显示和停止。历史保存在 Windows 的 `%LOCALAPPDATA%\DSHDragon\chat-history.json`，可在窗口中切换或删除。Codex 登录由本机 Codex 客户端管理。[Windows 数据保护](https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata)
 - **快捷对话**可点悬停快捷栏的「对话」，也可按 **Ctrl+Alt+J** 或从右键、托盘打开。它使用当前模型和对话，按 Enter 发送文字，点回复气泡查看全文。右键「显示与播放」可更换或关闭全局快捷键。
+- **在对话里用桌面小工具**适用于默认白龙、雏龙娘和大肥鱼。快捷对话和完整对话都可输入「查成都天气」「我还剩多少 Codex 额度」或「工作日九点提醒我喝水」，也可用快捷对话的听写功能。查询结果会显示在气泡和本地对话记录中。添加待办时，先核对预览里的日期、时间和重复规则，再点「确认添加」。点「取消」会关闭预览。[三个指令的用法](../README.md#在对话里使用桌面小工具)
 - 设置快捷键时，请按住 Ctrl、Alt、Shift 或 Win，再按一个字母或数字。输入框会显示完整组合键。格式不符或已被占用时，可在原窗口查看提示并重新录入。
 - **按住说话**位于快捷对话。窗口获得焦点时按住 **F9** 或按住说话按钮，等看到「正在录音」再讲话。也可以点「开始录音」，说完点「停止录音」。Windows 在本机识别并填入可编辑草稿，按 Enter 才发送文字。每段最多 30 秒，录音保留在内存，需要可用的默认麦克风和支持听写的 Windows 本地识别语言。[Windows 本地语音识别](https://learn.microsoft.com/en-us/dotnet/api/system.speech.recognition.speechrecognitionengine?view=netframework-4.8)
 - **白龙记忆**位于完整聊天窗口。可直接添加、编辑或删除条目，也可在历史里选中文字，点「记住选中内容」后确认保存。记忆保存在本机设置中。只有勾选「在聊天请求中使用这些记忆」后，普通和快捷对话才会把条目随请求发给当前配置的模型。

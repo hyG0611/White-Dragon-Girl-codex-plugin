@@ -145,6 +145,72 @@ def repeat_picker(value=''):
     return box
 
 
+def reminder_summary(todo):
+    due = datetime.fromtimestamp(todo['due']).strftime('%Y-%m-%d %H:%M:%S')
+    repeat = REPEAT_OPTIONS[todo.get('repeat', '')]
+    return f'事项：{todo["text"]}\n提醒时间：{due}\n重复：{repeat}'
+
+
+def prompt_reminder(parent, sentence='', mode=''):
+    dialog = PetDialog(parent)
+    dialog.setWindowTitle('一句话添加提醒')
+    dialog.resize(500, 150)
+    layout = QVBoxLayout(dialog)
+    text = QLineEdit(sentence)
+    text.setMaxLength(150)
+    text.setPlaceholderText('例如：10分钟后提醒我喝水')
+    layout.addWidget(text)
+    repeat = repeat_picker(mode)
+    form = QFormLayout()
+    form.addRow('重复', repeat)
+    layout.addLayout(form)
+    preview = QLabel()
+    preview.setWordWrap(True)
+    preview.setTextFormat(Qt.PlainText)
+    layout.addWidget(preview)
+    buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+    save = buttons.button(QDialogButtonBox.Save)
+    save.setText('确认添加')
+    buttons.button(QDialogButtonBox.Cancel).setText('取消')
+    layout.addWidget(buttons)
+    todo = None
+
+    def update_preview():
+        nonlocal todo
+        todo = None
+        try:
+            if text.text().strip():
+                todo = parse_reminder(text.text())
+            if todo is None:
+                preview.setText('也可以输入「今晚8点提醒我开会」或「明天 09:30 提醒我交报告」。')
+            else:
+                if repeat.currentData():
+                    todo['repeat'] = repeat.currentData()
+                    todo['due'] = next_repeat(todo['due'], todo['repeat'], todo['due'] - 1)
+                preview.setText(reminder_summary(todo))
+        except ValueError as error:
+            preview.setText(str(error))
+        save.setEnabled(todo is not None)
+
+    def confirm():
+        if todo is not None and todo['due'] > time():
+            dialog.accept()
+        else:
+            update_preview()
+            if todo is not None:
+                preview.setText('上一次预览的时间已过，已重新计算。\n' + preview.text())
+
+    text.textChanged.connect(update_preview)
+    repeat.currentIndexChanged.connect(update_preview)
+    buttons.accepted.connect(confirm)
+    buttons.rejected.connect(dialog.reject)
+    update_preview()
+    try:
+        return todo if dialog.exec() else None
+    finally:
+        dialog.deleteLater()
+
+
 def edit_menu(parent, labels, hidden, groups=None):
     dialog = PetDialog(parent)
     dialog.setWindowTitle('配置菜单')
@@ -303,59 +369,8 @@ class TodoDialog(PetDialog):
         self.edit_item(None)
 
     def add_sentence(self):
-        dialog = PetDialog(self)
-        dialog.setWindowTitle('一句话添加提醒')
-        dialog.resize(500, 130)
-        layout = QVBoxLayout(dialog)
-        text = QLineEdit()
-        text.setMaxLength(150)
-        text.setPlaceholderText('例如：10分钟后提醒我喝水')
-        layout.addWidget(text)
-        repeat = repeat_picker()
-        form = QFormLayout()
-        form.addRow('重复', repeat)
-        layout.addLayout(form)
-        preview = QLabel()
-        preview.setWordWrap(True)
-        preview.setTextFormat(Qt.PlainText)
-        layout.addWidget(preview)
-        buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        save = buttons.button(QDialogButtonBox.Save)
-        layout.addWidget(buttons)
-        todo = None
-
-        def update_preview():
-            nonlocal todo
-            todo = None
-            try:
-                if text.text().strip():
-                    todo = parse_reminder(text.text())
-                if todo is None:
-                    preview.setText('也可以输入「今晚8点提醒我开会」或「明天 09:30 提醒我交报告」。')
-                else:
-                    if repeat.currentData():
-                        todo['repeat'] = repeat.currentData()
-                        todo['due'] = next_repeat(todo['due'], todo['repeat'], todo['due'] - 1)
-                    due = datetime.fromtimestamp(todo['due']).strftime('%Y-%m-%d %H:%M:%S')
-                    preview.setText(f'到期时间：{due}\n事项：{todo["text"]}')
-            except ValueError as error:
-                preview.setText(str(error))
-            save.setEnabled(todo is not None)
-
-        def confirm():
-            if todo is not None and todo['due'] > time():
-                dialog.accept()
-            else:
-                update_preview()
-                if todo is not None:
-                    preview.setText('上一次预览的时间已过，已重新计算。\n' + preview.text())
-
-        text.textChanged.connect(update_preview)
-        repeat.currentIndexChanged.connect(update_preview)
-        buttons.accepted.connect(confirm)
-        buttons.rejected.connect(dialog.reject)
-        update_preview()
-        if dialog.exec():
+        todo = prompt_reminder(self)
+        if todo is not None:
             self.pet.todos.append(todo)
             self.pet.save_todos()
 
