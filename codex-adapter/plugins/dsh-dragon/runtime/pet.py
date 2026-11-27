@@ -12,11 +12,12 @@ if sys.platform == 'win32':
 
 import cv2
 import numpy as np
-from PySide6.QtCore import QAbstractNativeEventFilter, QEasingCurve, QPoint, QPropertyAnimation, QRect, Qt, QSettings, QTimer, Signal
-from PySide6.QtGui import QColor, QFontMetrics, QIcon, QKeySequence, QLinearGradient, QPainter, QPixmap, QPolygon
+from PySide6.QtCore import QAbstractNativeEventFilter, QEasingCurve, QPoint, QPointF, QPropertyAnimation, Qt, QSettings, QTimer, Signal
+from PySide6.QtGui import QIcon, QKeySequence, QPainter, QPixmap
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QStyle, QSystemTrayIcon
 from activity import Activity
+from cloud_bubble import CloudBubble
 from media import ClipPool
 from dialogs import TodoDialog, display_hotkey, edit_hotkey, edit_menu, edit_number, edit_settings
 from island import MediaDashboard
@@ -148,6 +149,7 @@ class Pet(QWidget):
         self.spin_timer.timeout.connect(self.spin_frame)
         self.message = ''
         self.message_opens_chat = False
+        self._bubble = None
         self.bubble_timer = QTimer(self)
         self.bubble_timer.setSingleShot(True)
         self.bubble_timer.timeout.connect(self.clear_message)
@@ -440,10 +442,13 @@ class Pet(QWidget):
             self.pixmap = frame
             self.update()
 
-    def bubble_rect(self, font):
-        flags = Qt.AlignCenter | Qt.TextWordWrap
-        height = QFontMetrics(font).boundingRect(QRect(63, 0, 354, 120), flags, self.message).height() + 16
-        return QRect(44, 3, 392, height)
+    def cloud_bubble(self):
+        font = self.font()
+        font.setFamilies(['YouYuan', *font.families()])
+        font.setPixelSize(self.bubble_font)
+        if self._bubble is None or self._bubble.font != font:
+            self._bubble = CloudBubble(self.message, font)
+        return self._bubble
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -458,34 +463,14 @@ class Pet(QWidget):
         painter.drawPixmap(-240, -135, 480, 270, self.pixmap)
         painter.restore()
         if self.message:
-            font = painter.font()
-            font.setPixelSize(self.bubble_font)
-            painter.setFont(font)
-            flags = Qt.AlignCenter | Qt.TextWordWrap
-            box = self.bubble_rect(font)
-            gradient = QLinearGradient(box.topLeft(), box.bottomRight())
-            gradient.setColorAt(0, QColor('#f8fdff'))
-            gradient.setColorAt(1, QColor('#dedcff'))
-            painter.setPen(QColor('#aca6db'))
-            painter.setBrush(gradient)
-            painter.drawRoundedRect(box, 15, 15)
-            painter.setBrush(QColor('#ebe9ff'))
-            painter.drawPolygon(QPolygon([QPoint(231, box.bottom()), QPoint(249, box.bottom()),
-                                          QPoint(239, box.bottom() + 9)]))
-            painter.setPen(QColor('#7864ba'))
-            painter.drawText(52, 20, '✦')
-            painter.drawText(416, box.bottom() - 8, '✧')
-            painter.setPen(QColor('#30284f'))
-            painter.drawText(box.adjusted(19, 6, -19, -6), flags, self.message)
+            self.cloud_bubble().draw(painter)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            if self.message_opens_chat:
-                font = self.font()
-                font.setPixelSize(self.bubble_font)
+            if self.message and self.message_opens_chat:
                 position = event.position()
-                hit = QPoint(round(position.x() * 480 / self.width()), round(position.y() * 320 / self.height()))
-                if self.bubble_rect(font).contains(hit):
+                hit = QPointF(position.x() * 480 / self.width(), position.y() * 320 / self.height())
+                if self.cloud_bubble().body.contains(hit):
                     self.open_chat()
                     return
             self.pause_walk()
@@ -932,6 +917,7 @@ class Pet(QWidget):
         self.pause_walk()
         self.message = message[:100]
         self.message_opens_chat = open_chat
+        self._bubble = None
         self.bubble_timer.start(duration)
         self.update()
 
@@ -997,6 +983,7 @@ class Pet(QWidget):
     def clear_message(self):
         self.message = ''
         self.message_opens_chat = False
+        self._bubble = None
         self.update()
 
 
